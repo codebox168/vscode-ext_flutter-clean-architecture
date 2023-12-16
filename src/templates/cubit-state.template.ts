@@ -14,7 +14,7 @@ function getEquatableCubitStateTemplate (cubitName: string): string {
   const snakeCaseCubitName = changeCase.snakeCase(cubitName.toLowerCase());
   return `part of '${snakeCaseCubitName}_cubit.dart';
 
-abstract class ${pascalCaseCubitName}State extends Equatable {
+sealed class ${pascalCaseCubitName}State extends Equatable {
   const ${pascalCaseCubitName}State();
 
   @override
@@ -31,7 +31,7 @@ function getDefaultCubitStateTemplate (cubitName: string): string {
   return `part of '${snakeCaseCubitName}_cubit.dart';
 
 @immutable
-abstract class ${pascalCaseCubitName}State {}
+sealed class ${pascalCaseCubitName}State {}
 
 class ${pascalCaseCubitName}Initial extends ${pascalCaseCubitName}State {}
 `;

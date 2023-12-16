@@ -10,7 +10,7 @@ function getEquatableCubitTemplate (cubitName: string) {
   const pascalCaseCubitName = changeCase.pascalCase(cubitName.toLowerCase());
   const snakeCaseCubitName = changeCase.snakeCase(cubitName.toLowerCase());
   const cubitState = `${pascalCaseCubitName}State`;
-  return `import 'package:bloc/bloc.dart';
+  return `import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:equatable/equatable.dart';
 
 part '${snakeCaseCubitName}_state.dart';
@@ -25,7 +25,7 @@ function getDefaultCubitTemplate (cubitName: string) {
   const pascalCaseCubitName = changeCase.pascalCase(cubitName.toLowerCase());
   const snakeCaseCubitName = changeCase.snakeCase(cubitName.toLowerCase());
   const cubitState = `${pascalCaseCubitName}State`;
-  return `import 'package:bloc/bloc.dart';
+  return `import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:meta/meta.dart';
 
 part '${snakeCaseCubitName}_state.dart';
