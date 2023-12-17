@@ -65,7 +65,7 @@ export async function Go(uri: Uri, stateManagement: StateManagement) {
   const useEquatable = true;
 
   const pascalCaseFeatureName = changeCase.pascalCase(
-    featureName.toLowerCase()
+    featureName
   );
   try {
     await generateFeatureArchitecture(
@@ -371,7 +371,7 @@ function createBlocEventTemplate(
   targetDirectory: string,
   useEquatable: boolean
 ) {
-  const snakeCaseBlocName = changeCase.snakeCase(blocName.toLowerCase());
+  const snakeCaseBlocName = changeCase.snakeCase(blocName);
   const targetPath = `${targetDirectory}/bloc/${snakeCaseBlocName}_event.dart`;
   if (existsSync(targetPath)) {
     throw Error(`${snakeCaseBlocName}_event.dart already exists`);
@@ -397,7 +397,7 @@ function createBlocStateTemplate(
   targetDirectory: string,
   useEquatable: boolean
 ) {
-  const snakeCaseBlocName = changeCase.snakeCase(blocName.toLowerCase());
+  const snakeCaseBlocName = changeCase.snakeCase(blocName);
   const targetPath = `${targetDirectory}/bloc/${snakeCaseBlocName}_state.dart`;
   if (existsSync(targetPath)) {
     throw Error(`${snakeCaseBlocName}_state.dart already exists`);
@@ -423,7 +423,7 @@ function createBlocTemplate(
   targetDirectory: string,
   useEquatable: boolean
 ) {
-  const snakeCaseBlocName = changeCase.snakeCase(blocName.toLowerCase());
+  const snakeCaseBlocName = changeCase.snakeCase(blocName);
   const targetPath = `${targetDirectory}/bloc/${snakeCaseBlocName}_bloc.dart`;
   if (existsSync(targetPath)) {
     throw Error(`${snakeCaseBlocName}_bloc.dart already exists`);
@@ -449,7 +449,7 @@ function createCubitStateTemplate(
   targetDirectory: string,
   useEquatable: boolean
 ) {
-  const snakeCaseBlocName = changeCase.snakeCase(blocName.toLowerCase());
+  const snakeCaseBlocName = changeCase.snakeCase(blocName);
   const targetPath = `${targetDirectory}/cubit/${snakeCaseBlocName}_state.dart`;
   if (existsSync(targetPath)) {
     throw Error(`${snakeCaseBlocName}_state.dart already exists`);
@@ -475,7 +475,7 @@ function createCubitTemplate(
   targetDirectory: string,
   useEquatable: boolean
 ) {
-  const snakeCaseBlocName = changeCase.snakeCase(blocName.toLowerCase());
+  const snakeCaseBlocName = changeCase.snakeCase(blocName);
   const targetPath = `${targetDirectory}/cubit/${snakeCaseBlocName}_cubit.dart`;
   if (existsSync(targetPath)) {
     throw Error(`${snakeCaseBlocName}_cubit.dart already exists`);
@@ -502,7 +502,7 @@ function createNotifierStateTemplate(
   targetDirectory: string,
   useEquatable: boolean
 ) {
-  const snakeCaseBlocName = changeCase.snakeCase(blocName.toLowerCase());
+  const snakeCaseBlocName = changeCase.snakeCase(blocName);
   const targetPath = `${targetDirectory}/notifier/${snakeCaseBlocName}_state.dart`;
   if (existsSync(targetPath)) {
     throw Error(`${snakeCaseBlocName}_state.dart already exists`);
@@ -528,7 +528,7 @@ function createNotifierTemplate(
   targetDirectory: string,
   useEquatable: boolean
 ) {
-  const snakeCaseBlocName = changeCase.snakeCase(blocName.toLowerCase());
+  const snakeCaseBlocName = changeCase.snakeCase(blocName);
   const targetPath = `${targetDirectory}/notifier/${snakeCaseBlocName}_notifier.dart`;
   if (existsSync(targetPath)) {
     throw Error(`${snakeCaseBlocName}_notifier.dart already exists`);

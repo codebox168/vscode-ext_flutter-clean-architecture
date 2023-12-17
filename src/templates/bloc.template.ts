@@ -7,8 +7,8 @@ export function getBlocTemplate (blocName: string, useEquatable: boolean): strin
 }
 
 function getEquatableBlocTemplate (blocName: string) {
-  const pascalCaseBlocName = changeCase.pascalCase(blocName.toLowerCase());
-  const snakeCaseBlocName = changeCase.snakeCase(blocName.toLowerCase());
+  const pascalCaseBlocName = changeCase.pascalCase(blocName);
+  const snakeCaseBlocName = changeCase.snakeCase(blocName);
   const blocState = `${pascalCaseBlocName}State`;
   const blocEvent = `${pascalCaseBlocName}Event`;
   return `import 'package:flutter_bloc/flutter_bloc.dart';
@@ -28,8 +28,8 @@ class ${pascalCaseBlocName}Bloc extends Bloc<${blocEvent}, ${blocState}> {
 }
 
 function getDefaultBlocTemplate (blocName: string) {
-  const pascalCaseBlocName = changeCase.pascalCase(blocName.toLowerCase());
-  const snakeCaseBlocName = changeCase.snakeCase(blocName.toLowerCase());
+  const pascalCaseBlocName = changeCase.pascalCase(blocName);
+  const snakeCaseBlocName = changeCase.snakeCase(blocName);
   const blocState = `${pascalCaseBlocName}State`;
   const blocEvent = `${pascalCaseBlocName}Event`;
   return `import 'package:flutter_bloc/flutter_bloc.dart';

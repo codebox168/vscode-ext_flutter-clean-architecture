@@ -10,8 +10,8 @@ export function getNotifierStateTemplate (
 }
 
 function getEquatableNotifierStateTemplate (notifierName: string): string {
-  const pascalCaseNotifierName = changeCase.pascalCase(notifierName.toLowerCase());
-  const snakeCaseNotifierName = changeCase.snakeCase(notifierName.toLowerCase());
+  const pascalCaseNotifierName = changeCase.pascalCase(notifierName);
+  const snakeCaseNotifierName = changeCase.snakeCase(notifierName);
   return `part of '${snakeCaseNotifierName}_notifier.dart';
 
 sealed class ${pascalCaseNotifierName}State extends Equatable {
@@ -26,8 +26,8 @@ class ${pascalCaseNotifierName}Initial extends ${pascalCaseNotifierName}State {}
 }
 
 function getDefaultNotifierStateTemplate (notifierName: string): string {
-  const pascalCaseNotifierName = changeCase.pascalCase(notifierName.toLowerCase());
-  const snakeCaseNotifierName = changeCase.snakeCase(notifierName.toLowerCase());
+  const pascalCaseNotifierName = changeCase.pascalCase(notifierName);
+  const snakeCaseNotifierName = changeCase.snakeCase(notifierName);
   return `part of '${snakeCaseNotifierName}_notifier.dart';
 
 @immutable

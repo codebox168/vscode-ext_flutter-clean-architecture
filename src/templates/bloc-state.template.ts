@@ -10,8 +10,8 @@ export function getBlocStateTemplate (
 }
 
 function getEquatableBlocStateTemplate (blocName: string): string {
-  const pascalCaseBlocName = changeCase.pascalCase(blocName.toLowerCase());
-  const snakeCaseBlocName = changeCase.snakeCase(blocName.toLowerCase());
+  const pascalCaseBlocName = changeCase.pascalCase(blocName);
+  const snakeCaseBlocName = changeCase.snakeCase(blocName);
   return `part of '${snakeCaseBlocName}_bloc.dart';
 
 sealed class ${pascalCaseBlocName}State extends Equatable {
@@ -25,8 +25,8 @@ class ${pascalCaseBlocName}Initial extends ${pascalCaseBlocName}State {}
 }
 
 function getDefaultBlocStateTemplate (blocName: string): string {
-  const pascalCaseBlocName = changeCase.pascalCase(blocName.toLowerCase());
-  const snakeCaseBlocName = changeCase.snakeCase(blocName.toLowerCase());
+  const pascalCaseBlocName = changeCase.pascalCase(blocName);
+  const snakeCaseBlocName = changeCase.snakeCase(blocName);
   return `part of '${snakeCaseBlocName}_bloc.dart';
 @immutable
 sealed class ${pascalCaseBlocName}State {}

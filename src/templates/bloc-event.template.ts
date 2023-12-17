@@ -10,8 +10,8 @@ export function getBlocEventTemplate (
 }
 
 function getEquatableBlocEventTemplate (blocName: string): string {
-  const pascalCaseBlocName = changeCase.pascalCase(blocName.toLowerCase());
-  const snakeCaseBlocName = changeCase.snakeCase(blocName.toLowerCase());
+  const pascalCaseBlocName = changeCase.pascalCase(blocName);
+  const snakeCaseBlocName = changeCase.snakeCase(blocName);
   return `part of '${snakeCaseBlocName}_bloc.dart';
 
 sealed class ${pascalCaseBlocName}Event extends Equatable {
@@ -24,8 +24,8 @@ sealed class ${pascalCaseBlocName}Event extends Equatable {
 }
 
 function getDefaultBlocEventTemplate (blocName: string): string {
-  const pascalCaseBlocName = changeCase.pascalCase(blocName.toLowerCase());
-  const snakeCaseBlocName = changeCase.snakeCase(blocName.toLowerCase());
+  const pascalCaseBlocName = changeCase.pascalCase(blocName);
+  const snakeCaseBlocName = changeCase.snakeCase(blocName);
   return `part of '${snakeCaseBlocName}_bloc.dart';
 @immutable
 sealed class ${pascalCaseBlocName}Event {}

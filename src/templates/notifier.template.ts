@@ -7,8 +7,8 @@ export function getNotifierTemplate (notifierName: string, useEquatable: boolean
 }
 
 function getEquatableNotifierTemplate (notifierName: string) {
-  const pascalCaseNotifierName = changeCase.pascalCase(notifierName.toLowerCase());
-  const snakeCaseNotifierName = changeCase.snakeCase(notifierName.toLowerCase());
+  const pascalCaseNotifierName = changeCase.pascalCase(notifierName);
+  const snakeCaseNotifierName = changeCase.snakeCase(notifierName);
   const notifierState = `${pascalCaseNotifierName}State`;
   return `import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:equatable/equatable.dart';
@@ -22,8 +22,8 @@ class ${pascalCaseNotifierName}Notifier extends StateNotifier<${notifierState}> 
 }
 
 function getDefaultNotifierTemplate (notifierName: string) {
-  const pascalCaseNotifierName = changeCase.pascalCase(notifierName.toLowerCase());
-  const snakeCaseNotifierName = changeCase.snakeCase(notifierName.toLowerCase());
+  const pascalCaseNotifierName = changeCase.pascalCase(notifierName);
+  const snakeCaseNotifierName = changeCase.snakeCase(notifierName);
   const notifierState = `${pascalCaseNotifierName}State`;
   return `import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:meta/meta.dart';
