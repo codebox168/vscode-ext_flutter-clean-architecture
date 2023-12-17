@@ -34,7 +34,7 @@ abstract class ${pascalCaseNotifierName}RemoteDatasource {
 export function getRemoteDatasourceImplTemplate (notifierName: string): string {
     const pascalCaseNotifierName = changeCase.pascalCase(notifierName);
     const snakeCaseNotifierName = changeCase.snakeCase(notifierName);
-    return `import '${snakeCaseNotifierName}_local_datasource.dart';
+    return `import '${snakeCaseNotifierName}_remote_datasource.dart';
   
 class ${pascalCaseNotifierName}RemoteDatasourceImpl implements ${pascalCaseNotifierName}RemoteDatasource {  
       ${pascalCaseNotifierName}RemoteDatasourceImpl();

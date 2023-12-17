@@ -272,7 +272,7 @@ export async function generateFeatureArchitecture(
   }
 
   // Create the feature directory
-  const featureDirectoryPath = path.join(featuresDirectoryPath, featureName);
+  const featureDirectoryPath = path.join(featuresDirectoryPath, changeCase.snakeCase(featureName));
   await createDirectory(featureDirectoryPath);
 
   // Create the data layer
@@ -296,7 +296,7 @@ export async function generateFeatureArchitecture(
     "usecases",
   ]);
   // Generate the repository in the domain layer
-  await generateRepositoryCode(featureName, dataDirectoryPath);
+  await generateRepositoryCode(featureName, domainDirectoryPath);
   // Create the presentation layer
   const presentationDirectoryPath = path.join(
     featureDirectoryPath,
