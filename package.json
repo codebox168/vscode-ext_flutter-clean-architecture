@@ -2,11 +2,11 @@
   "name": "flutter-clean-architecture",
   "displayName": "Flutter Feature Scaffolding",
   "description": "Add new feature easily with well structured directories (Clean Architecture pattern)",
-  "version": "2.1.4",
-  "publisher": "KiritchoukC",
+  "version": "1.0.0",
+  "publisher": "CodeBox",
   "repository": {
     "type": "git",
-    "url": "https://github.com/KiritchoukC/vscode-ext_flutter-clean-architecture"
+    "url": "https://github.com/codebox168/vscode-ext_flutter-clean-architecture"
   },
   "license": "MIT",
   "engines": {
@@ -41,6 +41,12 @@
         "title": "Cubit: New Feature",
         "category": "Flutter Clean Architecture",
         "icon": "assets/logo.png"
+      },
+      {
+        "command": "extension.new-feature-notifier",
+        "title": "Notifier: New Feature",
+        "category": "Flutter Clean Architecture",
+        "icon": "assets/logo.png"
       }
     ],
     "menus": {
@@ -54,6 +60,11 @@
           "command": "extension.new-feature-cubit",
           "group": "cleanArchitectureGroup@2",
           "when": "explorerResourceIsFolder"
+        },
+        {
+          "command": "extension.new-feature-notifier",
+          "group": "cleanArchitectureGroup@3",
+          "when": "explorerResourceIsFolder"
         }
       ]
     }
@@ -64,13 +75,13 @@
     "watch": "tsc -watch -p ./",
     "pretest": "yarn run compile",
     "test": "node ./out/test/runTest.js",
-    "deploy": "vsce publish --yarn"
+    "deploy": "vsce package"
   },
   "devDependencies": {
     "@types/change-case": "^2.3.1",
     "@types/glob": "^7.1.1",
     "@types/js-yaml": "^3.12.1",
-    "@types/lodash": "^4.14.121",
+    "@types/lodash": "^4.14.202",
     "@types/mkdirp": "^0.5.2",
     "@types/mocha": "^5.2.6",
     "@types/node": "^12.7.8",
@@ -79,10 +90,10 @@
     "@types/vscode": "^1.31.0",
     "cz-conventional-changelog": "^3.0.2",
     "glob": "^7.1.4",
-    "mocha": "^6.1.4",
+    "mocha": "^10.2.0",
     "tslint": "^5.12.1",
-    "typescript": "^3.3.1",
-    "vsce": "^1.81.1",
+    "typescript": "^5.3.3",
+    "vsce": "^2.15.0",
     "vscode-test": "^1.2.0"
   },
   "dependencies": {

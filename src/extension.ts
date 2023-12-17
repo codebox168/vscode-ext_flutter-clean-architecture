@@ -25,6 +25,8 @@ import {
   getNotifierTemplate,
 } from "./templates";
 import { analyzeDependencies } from "./utils";
+import { getRepositoryImplTemplate, getRepositoryTemplate } from "./templates/repository.template";
+import { getLocalDatasourceImplTemplate, getLocalDatasourceTemplate, getRemoteDatasourceImplTemplate, getRemoteDatasourceTemplate } from "./templates/datasource.template";
 
 export function activate(_context: ExtensionContext) {
   analyzeDependencies();
@@ -150,6 +152,64 @@ export async function promptForUseEquatable(): Promise<boolean> {
   return answer === "yes (advanced)";
 }
 
+async function generateRemoteDatasourceImplCode(
+  remoteDatasourceName: string,
+  targetDirectory: string,
+) {
+  const remoteDatasourceDirectoryPath = `${targetDirectory}/datasources`;
+  if (!existsSync(remoteDatasourceDirectoryPath)) {
+    await createDirectory(remoteDatasourceDirectoryPath);
+  }
+
+  await Promise.all([
+    createRemoteDatasourceTemplate(remoteDatasourceName, targetDirectory),
+    createRemoteDatasourceImplTemplate(remoteDatasourceName, targetDirectory),
+  ]);
+}
+
+async function generateLocalDatasourceImplCode(
+  localDatasourceName: string,
+  targetDirectory: string,
+) {
+  const localDatasourceDirectoryPath = `${targetDirectory}/datasources`;
+  if (!existsSync(localDatasourceDirectoryPath)) {
+    await createDirectory(localDatasourceDirectoryPath);
+  }
+
+  await Promise.all([
+    createLocalDatasourceTemplate(localDatasourceName, targetDirectory),
+    createLocalDatasourceImplTemplate(localDatasourceName, targetDirectory),
+  ]);
+}
+
+async function generateRepositoryImplCode(
+  repositoryName: string,
+  targetDirectory: string,
+) {
+  const repositoryDirectoryPath = `${targetDirectory}/repositories`;
+  if (!existsSync(repositoryDirectoryPath)) {
+    await createDirectory(repositoryDirectoryPath);
+  }
+
+  await Promise.all([
+    createRepositoryImplTemplate(repositoryName, targetDirectory),
+  ]);
+}
+
+async function generateRepositoryCode(
+  repositoryName: string,
+  targetDirectory: string,
+) {
+  const repositoryDirectoryPath = `${targetDirectory}/repositories`;
+  if (!existsSync(repositoryDirectoryPath)) {
+    await createDirectory(repositoryDirectoryPath);
+  }
+
+  await Promise.all([
+    createRepositoryTemplate(repositoryName, targetDirectory),
+  ]);
+}
+
 async function generateBlocCode(
   blocName: string,
   targetDirectory: string,
@@ -222,7 +282,11 @@ export async function generateFeatureArchitecture(
     "models",
     "repositories",
   ]);
-
+  // Generate the repository_impl in the data layer
+  await generateRepositoryImplCode(featureName, dataDirectoryPath);
+  // Generate the datasource in the data layer
+  await generateLocalDatasourceImplCode(featureName, dataDirectoryPath);
+  await generateRemoteDatasourceImplCode(featureName, dataDirectoryPath);
   // Create the domain layer
   const domainDirectoryPath = path.join(featureDirectoryPath, "domain");
   await createDirectories(domainDirectoryPath, [
@@ -231,7 +295,8 @@ export async function generateFeatureArchitecture(
     "repositories",
     "usecases",
   ]);
-
+  // Generate the repository in the domain layer
+  await generateRepositoryCode(featureName, dataDirectoryPath);
   // Create the presentation layer
   const presentationDirectoryPath = path.join(
     featureDirectoryPath,
@@ -464,7 +529,7 @@ function createNotifierTemplate(
   useEquatable: boolean
 ) {
   const snakeCaseBlocName = changeCase.snakeCase(blocName.toLowerCase());
-  const targetPath = `${targetDirectory}/notifier/${snakeCaseBlocName}_cubit.dart`;
+  const targetPath = `${targetDirectory}/notifier/${snakeCaseBlocName}_notifier.dart`;
   if (existsSync(targetPath)) {
     throw Error(`${snakeCaseBlocName}_notifier.dart already exists`);
   }
@@ -472,6 +537,157 @@ function createNotifierTemplate(
     writeFile(
       targetPath,
       getNotifierTemplate(blocName, useEquatable),
+      "utf8",
+      (error) => {
+        if (error) {
+          reject(error);
+          return;
+        }
+        resolve(true);
+      }
+    );
+  });
+}
+
+
+function createRepositoryTemplate(
+  featureName: string,
+  targetDirectory: string
+) {
+  const snakeCaseFeatureName = changeCase.snakeCase(featureName);
+  const targetPath = `${targetDirectory}/repositories/${snakeCaseFeatureName}_repository.dart`;
+  if (existsSync(targetPath)) {
+    throw Error(`${snakeCaseFeatureName}_repository.dart already exists`);
+  }
+  return new Promise(async (resolve, reject) => {
+    writeFile(
+      targetPath,
+      getRepositoryTemplate(featureName),
+      "utf8",
+      (error) => {
+        if (error) {
+          reject(error);
+          return;
+        }
+        resolve(true);
+      }
+    );
+  });
+}
+
+function createRepositoryImplTemplate(
+  featureName: string,
+  targetDirectory: string
+) {
+  const snakeCaseFeatureName = changeCase.snakeCase(featureName);
+  const targetPath = `${targetDirectory}/repositories/${snakeCaseFeatureName}_repository_impl.dart`;
+  if (existsSync(targetPath)) {
+    throw Error(`${snakeCaseFeatureName}_repository_impl.dart already exists`);
+  }
+  return new Promise(async (resolve, reject) => {
+    writeFile(
+      targetPath,
+      getRepositoryImplTemplate(featureName),
+      "utf8",
+      (error) => {
+        if (error) {
+          reject(error);
+          return;
+        }
+        resolve(true);
+      }
+    );
+  });
+}
+
+function createLocalDatasourceTemplate(
+  featureName: string,
+  targetDirectory: string,
+) {
+  const snakeCaseFeatureName = changeCase.snakeCase(featureName);
+  const targetPath = `${targetDirectory}/datasources/${snakeCaseFeatureName}_local_datasource.dart`;
+  if (existsSync(targetPath)) {
+    throw Error(`${snakeCaseFeatureName}_local_datasource.dart already exists`);
+  }
+  return new Promise(async (resolve, reject) => {
+    writeFile(
+      targetPath,
+      getLocalDatasourceTemplate(snakeCaseFeatureName),
+      "utf8",
+      (error) => {
+        if (error) {
+          reject(error);
+          return;
+        }
+        resolve(true);
+      }
+    );
+  });
+}
+
+function createLocalDatasourceImplTemplate(
+  featureName: string,
+  targetDirectory: string,
+) {
+  const snakeCaseFeatureName = changeCase.snakeCase(featureName);
+  const targetPath = `${targetDirectory}/datasources/${snakeCaseFeatureName}_local_datasource_impl.dart`;
+  if (existsSync(targetPath)) {
+    throw Error(`${snakeCaseFeatureName}_local_datasource_impl.dart already exists`);
+  }
+  return new Promise(async (resolve, reject) => {
+    writeFile(
+      targetPath,
+      getLocalDatasourceImplTemplate(snakeCaseFeatureName),
+      "utf8",
+      (error) => {
+        if (error) {
+          reject(error);
+          return;
+        }
+        resolve(true);
+      }
+    );
+  });
+}
+
+function createRemoteDatasourceTemplate(
+  featureName: string,
+  targetDirectory: string,
+) {
+  const snakeCaseFeatureName = changeCase.snakeCase(featureName);
+  const targetPath = `${targetDirectory}/datasources/${snakeCaseFeatureName}_remote_datasource.dart`;
+  if (existsSync(targetPath)) {
+    throw Error(`${snakeCaseFeatureName}_remote_datasource.dart already exists`);
+  }
+  return new Promise(async (resolve, reject) => {
+    writeFile(
+      targetPath,
+      getRemoteDatasourceTemplate(snakeCaseFeatureName),
+      "utf8",
+      (error) => {
+        if (error) {
+          reject(error);
+          return;
+        }
+        resolve(true);
+      }
+    );
+  });
+}
+
+function createRemoteDatasourceImplTemplate(
+  featureName: string,
+  targetDirectory: string,
+) {
+  const snakeCaseFeatureName = changeCase.snakeCase(featureName);
+  const targetPath = `${targetDirectory}/datasources/${snakeCaseFeatureName}_remote_datasource_impl.dart`;
+  if (existsSync(targetPath)) {
+    throw Error(`${snakeCaseFeatureName}_remote_datasource_impl.dart already exists`);
+  }
+  return new Promise(async (resolve, reject) => {
+    writeFile(
+      targetPath,
+      getRemoteDatasourceImplTemplate(snakeCaseFeatureName),
       "utf8",
       (error) => {
         if (error) {
