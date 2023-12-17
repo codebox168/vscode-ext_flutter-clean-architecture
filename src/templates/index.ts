@@ -5,3 +5,5 @@ export * from "./cubit-state.template";
 export * from "./cubit.template";
 export * from "./notifier-state.template";
 export * from "./notifier.template";
+export * from "./datasource.template";
+export * from "./repository.template";

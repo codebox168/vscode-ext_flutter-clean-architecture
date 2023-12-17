@@ -29,9 +29,8 @@ class ${pascalCaseNotifierName}RepositoryImpl implements ${pascalCaseNotifierNam
   ${pascalCaseNotifierName}RepositoryImpl({
     required ${pascalCaseNotifierName}LocalDatasource ${camelCaseNotifierName}LocalDatasource,
     required ${pascalCaseNotifierName}RemoteDatasource ${camelCaseNotifierName}RemoteDatasource,
-  })
-      : _${camelCaseNotifierName}LocalDatasource = ${camelCaseNotifierName}LocalDatasource,
-        _${camelCaseNotifierName}RemoteDatasource = ${camelCaseNotifierName}RemoteDatasource;
+  }) : _${camelCaseNotifierName}LocalDatasource = ${camelCaseNotifierName}LocalDatasource,
+       _${camelCaseNotifierName}RemoteDatasource = ${camelCaseNotifierName}RemoteDatasource;
 }
 `;
 }

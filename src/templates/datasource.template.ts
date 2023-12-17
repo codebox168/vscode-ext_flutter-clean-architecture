@@ -2,8 +2,7 @@ import * as changeCase from "change-case";
 
 export function getLocalDatasourceTemplate (notifierName: string): string {
   const pascalCaseNotifierName = changeCase.pascalCase(notifierName);
-  return `
-abstract class ${pascalCaseNotifierName}LocalDatasource {
+  return `abstract class ${pascalCaseNotifierName}LocalDatasource {
 
 }
 `;
@@ -24,8 +23,7 @@ class ${pascalCaseNotifierName}LocalDatasourceImpl implements ${pascalCaseNotifi
 
 export function getRemoteDatasourceTemplate (notifierName: string): string {
     const pascalCaseNotifierName = changeCase.pascalCase(notifierName);
-    return `
-abstract class ${pascalCaseNotifierName}RemoteDatasource {
+    return `abstract class ${pascalCaseNotifierName}RemoteDatasource {
   
 }
 `;
