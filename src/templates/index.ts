@@ -7,3 +7,4 @@ export * from "./notifier-state.template";
 export * from "./notifier.template";
 export * from "./datasource.template";
 export * from "./repository.template";
+export * from "./param.template";

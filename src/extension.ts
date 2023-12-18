@@ -23,6 +23,7 @@ import {
   getCubitTemplate,
   getNotifierStateTemplate,
   getNotifierTemplate,
+  getParamTemplate,
 } from "./templates";
 import { analyzeDependencies } from "./utils";
 import { getRepositoryImplTemplate, getRepositoryTemplate } from "./templates/repository.template";
@@ -55,6 +56,11 @@ export async function Go(uri: Uri, stateManagement: StateManagement) {
   }
   featureName = `${featureName}`;
 
+  // Show actions prompt
+  let actionsName: any = await promptForActions();
+  actionsName = `${actionsName?.trim()}`.split(',');
+
+
   let targetDirectory = "";
   try {
     targetDirectory = await getTargetDirectory(uri);
@@ -62,7 +68,6 @@ export async function Go(uri: Uri, stateManagement: StateManagement) {
     window.showErrorMessage(error.message);
   }
 
-  const useEquatable = true;
 
   const pascalCaseFeatureName = changeCase.pascalCase(
     featureName
@@ -71,7 +76,7 @@ export async function Go(uri: Uri, stateManagement: StateManagement) {
     await generateFeatureArchitecture(
       `${featureName}`,
       targetDirectory,
-      useEquatable,
+      actionsName,
       stateManagement
     );
     window.showInformationMessage(
@@ -136,6 +141,14 @@ export function promptForFeatureName(): Thenable<string | undefined> {
   return window.showInputBox(blocNamePromptOptions);
 }
 
+export function promptForActions(): Thenable<string | undefined> {
+  const actionListPromptOptions: InputBoxOptions = {
+    prompt: "Actions",
+    placeHolder: "login,signUp",
+  };
+  return window.showInputBox(actionListPromptOptions);
+}
+
 export async function promptForUseEquatable(): Promise<boolean> {
   const useEquatablePromptValues: string[] = ["no (default)", "yes (advanced)"];
   const useEquatablePromptOptions: QuickPickOptions = {
@@ -155,6 +168,7 @@ export async function promptForUseEquatable(): Promise<boolean> {
 async function generateRemoteDatasourceImplCode(
   remoteDatasourceName: string,
   targetDirectory: string,
+  actionsName: string[]
 ) {
   const remoteDatasourceDirectoryPath = `${targetDirectory}/datasources`;
   if (!existsSync(remoteDatasourceDirectoryPath)) {
@@ -162,7 +176,7 @@ async function generateRemoteDatasourceImplCode(
   }
 
   await Promise.all([
-    createRemoteDatasourceTemplate(remoteDatasourceName, targetDirectory),
+    createRemoteDatasourceTemplate(remoteDatasourceName, targetDirectory, actionsName),
     createRemoteDatasourceImplTemplate(remoteDatasourceName, targetDirectory),
   ]);
 }
@@ -170,6 +184,7 @@ async function generateRemoteDatasourceImplCode(
 async function generateLocalDatasourceImplCode(
   localDatasourceName: string,
   targetDirectory: string,
+  actionsName: string[]
 ) {
   const localDatasourceDirectoryPath = `${targetDirectory}/datasources`;
   if (!existsSync(localDatasourceDirectoryPath)) {
@@ -177,7 +192,7 @@ async function generateLocalDatasourceImplCode(
   }
 
   await Promise.all([
-    createLocalDatasourceTemplate(localDatasourceName, targetDirectory),
+    createLocalDatasourceTemplate(localDatasourceName, targetDirectory, actionsName),
     createLocalDatasourceImplTemplate(localDatasourceName, targetDirectory),
   ]);
 }
@@ -196,9 +211,22 @@ async function generateRepositoryImplCode(
   ]);
 }
 
+async function generateParamCode(
+  targetDirectory: string,
+  paramName: string
+) {
+  const repositoryDirectoryPath = `${targetDirectory}/params`;
+  if (!existsSync(repositoryDirectoryPath)) {
+    await createDirectory(repositoryDirectoryPath);
+  }
+  await Promise.all([
+    createParamTemplate(targetDirectory, paramName),
+  ]);
+}
 async function generateRepositoryCode(
   repositoryName: string,
   targetDirectory: string,
+  actionsName: string[]
 ) {
   const repositoryDirectoryPath = `${targetDirectory}/repositories`;
   if (!existsSync(repositoryDirectoryPath)) {
@@ -206,7 +234,7 @@ async function generateRepositoryCode(
   }
 
   await Promise.all([
-    createRepositoryTemplate(repositoryName, targetDirectory),
+    createRepositoryTemplate(repositoryName, targetDirectory, actionsName),
   ]);
 }
 
@@ -262,7 +290,7 @@ async function generateNotifierCode(
 export async function generateFeatureArchitecture(
   featureName: string,
   targetDirectory: string,
-  useEquatable: boolean,
+  actionsName: string[],
   stateManagement: StateManagement
 ) {
   // Create the features directory if its does not exist yet
@@ -285,8 +313,8 @@ export async function generateFeatureArchitecture(
   // Generate the repository_impl in the data layer
   await generateRepositoryImplCode(featureName, dataDirectoryPath);
   // Generate the datasource in the data layer
-  await generateLocalDatasourceImplCode(featureName, dataDirectoryPath);
-  await generateRemoteDatasourceImplCode(featureName, dataDirectoryPath);
+  await generateLocalDatasourceImplCode(featureName, dataDirectoryPath, actionsName);
+  await generateRemoteDatasourceImplCode(featureName, dataDirectoryPath, actionsName);
   // Create the domain layer
   const domainDirectoryPath = path.join(featureDirectoryPath, "domain");
   await createDirectories(domainDirectoryPath, [
@@ -296,7 +324,12 @@ export async function generateFeatureArchitecture(
     "usecases",
   ]);
   // Generate the repository in the domain layer
-  await generateRepositoryCode(featureName, domainDirectoryPath);
+  await generateRepositoryCode(featureName, domainDirectoryPath, actionsName);
+  // Generate the param in the domain layer
+  for (let paramName of actionsName) {
+    await generateParamCode(domainDirectoryPath,paramName);
+  }
+
   // Create the presentation layer
   const presentationDirectoryPath = path.join(
     featureDirectoryPath,
@@ -549,10 +582,35 @@ function createNotifierTemplate(
   });
 }
 
+function createParamTemplate(
+  targetDirectory: string,
+  paramName: string,
+) {
+  const snakeCaseParamName = changeCase.snakeCase(paramName);
+  const targetPath = `${targetDirectory}/params/param_${snakeCaseParamName}.dart`;
+  if (existsSync(targetPath)) {
+    throw Error(`param_${snakeCaseParamName}.dart already exists`);
+  }
+  return new Promise(async (resolve, reject) => {
+    writeFile(
+      targetPath,
+      getParamTemplate(paramName),
+      "utf8",
+      (error) => {
+        if (error) {
+          reject(error);
+          return;
+        }
+        resolve(true);
+      }
+    );
+  });
+}
 
 function createRepositoryTemplate(
   featureName: string,
-  targetDirectory: string
+  targetDirectory: string,
+  actionsName: string[],
 ) {
   const snakeCaseFeatureName = changeCase.snakeCase(featureName);
   const targetPath = `${targetDirectory}/repositories/${snakeCaseFeatureName}_repository.dart`;
@@ -562,7 +620,7 @@ function createRepositoryTemplate(
   return new Promise(async (resolve, reject) => {
     writeFile(
       targetPath,
-      getRepositoryTemplate(featureName),
+      getRepositoryTemplate(featureName, actionsName),
       "utf8",
       (error) => {
         if (error) {
@@ -603,6 +661,7 @@ function createRepositoryImplTemplate(
 function createLocalDatasourceTemplate(
   featureName: string,
   targetDirectory: string,
+  actionsName: string[],
 ) {
   const snakeCaseFeatureName = changeCase.snakeCase(featureName);
   const targetPath = `${targetDirectory}/datasources/${snakeCaseFeatureName}_local_datasource.dart`;
@@ -612,7 +671,7 @@ function createLocalDatasourceTemplate(
   return new Promise(async (resolve, reject) => {
     writeFile(
       targetPath,
-      getLocalDatasourceTemplate(snakeCaseFeatureName),
+      getLocalDatasourceTemplate(snakeCaseFeatureName, actionsName),
       "utf8",
       (error) => {
         if (error) {
@@ -653,6 +712,7 @@ function createLocalDatasourceImplTemplate(
 function createRemoteDatasourceTemplate(
   featureName: string,
   targetDirectory: string,
+  actionsName: string[],
 ) {
   const snakeCaseFeatureName = changeCase.snakeCase(featureName);
   const targetPath = `${targetDirectory}/datasources/${snakeCaseFeatureName}_remote_datasource.dart`;
@@ -662,7 +722,7 @@ function createRemoteDatasourceTemplate(
   return new Promise(async (resolve, reject) => {
     writeFile(
       targetPath,
-      getRemoteDatasourceTemplate(snakeCaseFeatureName),
+      getRemoteDatasourceTemplate(snakeCaseFeatureName, actionsName),
       "utf8",
       (error) => {
         if (error) {
