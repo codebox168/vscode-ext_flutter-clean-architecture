@@ -8,3 +8,7 @@ export * from "./notifier.template";
 export * from "./datasource.template";
 export * from "./repository.template";
 export * from "./param.template";
+export * from "./usecase-template";
+export * from "./entity.template";
+export * from "./model.template";
+export * from "./provider.template";

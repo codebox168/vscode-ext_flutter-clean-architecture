@@ -1,15 +1,9 @@
 import * as changeCase from "change-case";
 
-export function getNotifierStateTemplate (
+export function getNotifierStateTemplate(
   notifierName: string,
   useEquatable: boolean
 ): string {
-  return useEquatable
-    ? getEquatableNotifierStateTemplate(notifierName)
-    : getDefaultNotifierStateTemplate(notifierName);
-}
-
-function getEquatableNotifierStateTemplate (notifierName: string): string {
   const pascalCaseNotifierName = changeCase.pascalCase(notifierName);
   const snakeCaseNotifierName = changeCase.snakeCase(notifierName);
   return `part of '${snakeCaseNotifierName}_notifier.dart';
@@ -22,17 +16,24 @@ sealed class ${pascalCaseNotifierName}State extends Equatable {
 }
 
 class ${pascalCaseNotifierName}Initial extends ${pascalCaseNotifierName}State {}
+
+class ${pascalCaseNotifierName}Loaded extends ${pascalCaseNotifierName}State {
+  final ${pascalCaseNotifierName}Entity ${changeCase.camelCase(notifierName)}Entity;
+
+  const ${pascalCaseNotifierName}Loaded({required this.${changeCase.camelCase(notifierName)}Entity});
+  @override
+  List<Object> get props => [${changeCase.camelCase(notifierName)}Entity];
+}
+
+class ${pascalCaseNotifierName}Loading extends ${pascalCaseNotifierName}State {}
+
+class ${pascalCaseNotifierName}Error extends ${pascalCaseNotifierName}State {
+  final Failure failure;
+
+  const ${pascalCaseNotifierName}Error({required this.failure});
+  @override
+  List<Object> get props => [failure];
+}
 `;
 }
 
-function getDefaultNotifierStateTemplate (notifierName: string): string {
-  const pascalCaseNotifierName = changeCase.pascalCase(notifierName);
-  const snakeCaseNotifierName = changeCase.snakeCase(notifierName);
-  return `part of '${snakeCaseNotifierName}_notifier.dart';
-
-@immutable
-sealed class ${pascalCaseNotifierName}State {}
-
-class ${pascalCaseNotifierName}Initial extends ${pascalCaseNotifierName}State {}
-`;
-}

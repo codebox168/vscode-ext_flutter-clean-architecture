@@ -21,9 +21,13 @@ import {
   getBlocTemplate,
   getCubitStateTemplate,
   getCubitTemplate,
+  getEntityTemplate,
+  getModelTemplate,
   getNotifierStateTemplate,
   getNotifierTemplate,
   getParamTemplate,
+  getProviderTemplate,
+  getUsecaseTemplate,
 } from "./templates";
 import { analyzeDependencies } from "./utils";
 import { getRepositoryImplTemplate, getRepositoryTemplate } from "./templates/repository.template";
@@ -165,6 +169,152 @@ export async function promptForUseEquatable(): Promise<boolean> {
   return answer === "yes (advanced)";
 }
 
+export async function generateFeatureArchitecture(
+  featureName: string,
+  targetDirectory: string,
+  actionsName: string[],
+  stateManagement: StateManagement
+) {
+  // Create the features directory if its does not exist yet
+  const featuresDirectoryPath = getFeaturesDirectoryPath(targetDirectory);
+  if (!existsSync(featuresDirectoryPath)) {
+    await createDirectory(featuresDirectoryPath);
+  }
+
+  // Create the feature directory
+  const featureDirectoryPath = path.join(featuresDirectoryPath, changeCase.snakeCase(featureName));
+  await createDirectory(featureDirectoryPath);
+
+  // Create the data layer
+  const dataDirectoryPath = path.join(featureDirectoryPath, "data");
+  await createDirectories(dataDirectoryPath, [
+    "datasources",
+    "models",
+    "repositories",
+  ]);
+  // Generate the model in the data layer
+  await generateModelCode(featureName, dataDirectoryPath);
+  // Generate the repository_impl in the data layer
+  await generateRepositoryImplCode(featureName, dataDirectoryPath, actionsName);
+  // Generate the datasource in the data layer
+  await generateLocalDatasourceImplCode(featureName, dataDirectoryPath, actionsName);
+  await generateRemoteDatasourceImplCode(featureName, dataDirectoryPath, actionsName);
+  // Create the domain layer
+  const domainDirectoryPath = path.join(featureDirectoryPath, "domain");
+  await createDirectories(domainDirectoryPath, [
+    "entities",
+    "params",
+    "repositories",
+    "usecases",
+  ]);
+  // Generate the Entity in the domain layer
+  await generateEntityCode(featureName, domainDirectoryPath);
+  // Generate the repository in the domain layer
+  await generateRepositoryCode(featureName, domainDirectoryPath, actionsName);
+  // Generate the param in the domain layer
+  for (let paramName of actionsName) {
+    await generateParamCode(domainDirectoryPath, paramName);
+  }
+  // Generate the usecase in the domain layer
+  for (let usecaseName of actionsName) {
+    await generateUsecaseCode(domainDirectoryPath, usecaseName, featureName);
+  }
+
+  // Create the presentation layer
+  const presentationDirectoryPath = path.join(
+    featureDirectoryPath,
+    "presentation"
+  );
+  await createDirectories(presentationDirectoryPath, [
+    StateManagement[stateManagement],
+    "pages",
+    "widgets",
+  ]);
+
+  // Generate the bloc code in the presentation layer
+  switch (stateManagement) {
+    case StateManagement.bloc:
+      await generateBlocCode(featureName, presentationDirectoryPath, true);
+      break;
+    case StateManagement.cubit:
+      await generateCubitCode(featureName, presentationDirectoryPath, true);
+      break;
+    case StateManagement.notifier:
+      await generateNotifierCode(featureName, presentationDirectoryPath, true, actionsName);
+      await generateProviderCode(featureName, featureDirectoryPath, actionsName);
+      break;
+  }
+}
+
+async function generateProviderCode(
+  featureName: string,
+  targetDirectory: string,
+  actionsName: string[]
+) {
+  const targetPath = `${targetDirectory}/${changeCase.snakeCase(featureName)}_provider.dart`;
+  if (existsSync(targetPath)) {
+    throw Error(`${changeCase.snakeCase(featureName)}_provider.dart already exists`);
+  }
+  return new Promise(async (resolve, reject) => {
+    writeFile(
+      targetPath,
+      getProviderTemplate(featureName, actionsName),
+      "utf8",
+      (error) => {
+        if (error) {
+          reject(error);
+          return;
+        }
+        resolve(true);
+      }
+    );
+  });
+}
+
+export function getFeaturesDirectoryPath(currentDirectory: string): string {
+  // Split the path
+  const splitPath = currentDirectory.split(path.sep);
+
+  // Remove trailing \
+  if (splitPath[splitPath.length - 1] === "") {
+    splitPath.pop();
+  }
+
+  // Rebuild path
+  const result = splitPath.join(path.sep);
+
+  // Determines whether we're already in the features directory or not
+  const isDirectoryAlreadyFeatures =
+    splitPath[splitPath.length - 1] === "features";
+
+  // If already return the current directory if not, return the current directory with the /features append to it
+  return isDirectoryAlreadyFeatures ? result : path.join(result, "features");
+}
+
+export async function createDirectories(
+  targetDirectory: string,
+  childDirectories: string[]
+): Promise<void> {
+  // Create the parent directory
+  await createDirectory(targetDirectory);
+  // Creat the children
+  childDirectories.map(
+    async (directory) =>
+      await createDirectory(path.join(targetDirectory, directory))
+  );
+}
+
+function createDirectory(targetDirectory: string): Promise<void> {
+  return new Promise((resolve, reject) => {
+    mkdirp(targetDirectory, (error) => {
+      if (error) {
+        return reject(error);
+      }
+      resolve();
+    });
+  });
+}
+
 async function generateRemoteDatasourceImplCode(
   remoteDatasourceName: string,
   targetDirectory: string,
@@ -177,7 +327,7 @@ async function generateRemoteDatasourceImplCode(
 
   await Promise.all([
     createRemoteDatasourceTemplate(remoteDatasourceName, targetDirectory, actionsName),
-    createRemoteDatasourceImplTemplate(remoteDatasourceName, targetDirectory),
+    createRemoteDatasourceImplTemplate(remoteDatasourceName, targetDirectory, actionsName),
   ]);
 }
 
@@ -197,9 +347,39 @@ async function generateLocalDatasourceImplCode(
   ]);
 }
 
+async function generateModelCode(
+  modelName: string,
+  targetDirectory: string,
+) {
+  const modelDirectoryPath = `${targetDirectory}/models`;
+  if (!existsSync(modelDirectoryPath)) {
+    await createDirectory(modelDirectoryPath);
+  }
+  const snakeCaseModelName = changeCase.snakeCase(modelName);
+  const targetPath = `${targetDirectory}/models/${snakeCaseModelName}_model.dart`;
+  if (existsSync(targetPath)) {
+    throw Error(`${snakeCaseModelName}_model.dart already exists`);
+  }
+  return new Promise(async (resolve, reject) => {
+    writeFile(
+      targetPath,
+      getModelTemplate(modelName),
+      "utf8",
+      (error) => {
+        if (error) {
+          reject(error);
+          return;
+        }
+        resolve(true);
+      }
+    );
+  });
+}
+
 async function generateRepositoryImplCode(
   repositoryName: string,
   targetDirectory: string,
+  actionsName: string[]
 ) {
   const repositoryDirectoryPath = `${targetDirectory}/repositories`;
   if (!existsSync(repositoryDirectoryPath)) {
@@ -207,7 +387,7 @@ async function generateRepositoryImplCode(
   }
 
   await Promise.all([
-    createRepositoryImplTemplate(repositoryName, targetDirectory),
+    createRepositoryImplTemplate(repositoryName, targetDirectory, actionsName),
   ]);
 }
 
@@ -223,6 +403,52 @@ async function generateParamCode(
     createParamTemplate(targetDirectory, paramName),
   ]);
 }
+
+async function generateUsecaseCode(
+  targetDirectory: string,
+  usecaseName: string,
+  repositoryName: string
+) {
+  const repositoryDirectoryPath = `${targetDirectory}/usecases`;
+  if (!existsSync(repositoryDirectoryPath)) {
+    await createDirectory(repositoryDirectoryPath);
+  }
+  await Promise.all([
+    createUsecaseTemplate(targetDirectory, usecaseName, repositoryName),
+  ]);
+}
+
+async function generateEntityCode(
+  entityName: string,
+  targetDirectory: string
+) {
+  const entityDirectoryPath = `${targetDirectory}/entities`;
+  if (!existsSync(entityDirectoryPath)) {
+    await createDirectory(entityDirectoryPath);
+  }
+
+  const snakeCaseEntityName = changeCase.snakeCase(entityName);
+  const targetPath = `${targetDirectory}/entities/${snakeCaseEntityName}_entity.dart`;
+  if (existsSync(targetPath)) {
+    throw Error(`${snakeCaseEntityName}_entity.dart already exists`);
+  }
+  return new Promise(async (resolve, reject) => {
+    writeFile(
+      targetPath,
+      getEntityTemplate(entityName),
+      "utf8",
+      (error) => {
+        if (error) {
+          reject(error);
+          return;
+        }
+        resolve(true);
+      }
+    );
+  });
+}
+
+
 async function generateRepositoryCode(
   repositoryName: string,
   targetDirectory: string,
@@ -274,7 +500,8 @@ async function generateCubitCode(
 async function generateNotifierCode(
   blocName: string,
   targetDirectory: string,
-  useEquatable: boolean
+  useEquatable: boolean,
+  actionsName: string[],
 ) {
   const blocDirectoryPath = `${targetDirectory}/notifier`;
   if (!existsSync(blocDirectoryPath)) {
@@ -283,121 +510,11 @@ async function generateNotifierCode(
 
   await Promise.all([
     createNotifierStateTemplate(blocName, targetDirectory, useEquatable),
-    createNotifierTemplate(blocName, targetDirectory, useEquatable),
+    createNotifierTemplate(blocName, targetDirectory, useEquatable, actionsName),
   ]);
 }
 
-export async function generateFeatureArchitecture(
-  featureName: string,
-  targetDirectory: string,
-  actionsName: string[],
-  stateManagement: StateManagement
-) {
-  // Create the features directory if its does not exist yet
-  const featuresDirectoryPath = getFeaturesDirectoryPath(targetDirectory);
-  if (!existsSync(featuresDirectoryPath)) {
-    await createDirectory(featuresDirectoryPath);
-  }
 
-  // Create the feature directory
-  const featureDirectoryPath = path.join(featuresDirectoryPath, changeCase.snakeCase(featureName));
-  await createDirectory(featureDirectoryPath);
-
-  // Create the data layer
-  const dataDirectoryPath = path.join(featureDirectoryPath, "data");
-  await createDirectories(dataDirectoryPath, [
-    "datasources",
-    "models",
-    "repositories",
-  ]);
-  // Generate the repository_impl in the data layer
-  await generateRepositoryImplCode(featureName, dataDirectoryPath);
-  // Generate the datasource in the data layer
-  await generateLocalDatasourceImplCode(featureName, dataDirectoryPath, actionsName);
-  await generateRemoteDatasourceImplCode(featureName, dataDirectoryPath, actionsName);
-  // Create the domain layer
-  const domainDirectoryPath = path.join(featureDirectoryPath, "domain");
-  await createDirectories(domainDirectoryPath, [
-    "entities",
-    "params",
-    "repositories",
-    "usecases",
-  ]);
-  // Generate the repository in the domain layer
-  await generateRepositoryCode(featureName, domainDirectoryPath, actionsName);
-  // Generate the param in the domain layer
-  for (let paramName of actionsName) {
-    await generateParamCode(domainDirectoryPath,paramName);
-  }
-
-  // Create the presentation layer
-  const presentationDirectoryPath = path.join(
-    featureDirectoryPath,
-    "presentation"
-  );
-  await createDirectories(presentationDirectoryPath, [
-    StateManagement[stateManagement],
-    "pages",
-    "widgets",
-  ]);
-
-  // Generate the bloc code in the presentation layer
-  switch (stateManagement) {
-    case StateManagement.bloc:
-      await generateBlocCode(featureName, presentationDirectoryPath, true);
-      break;
-    case StateManagement.cubit:
-      await generateCubitCode(featureName, presentationDirectoryPath, true);
-      break;
-    case StateManagement.notifier:
-      await generateNotifierCode(featureName, presentationDirectoryPath, true);
-      break;
-  }
-}
-
-export function getFeaturesDirectoryPath(currentDirectory: string): string {
-  // Split the path
-  const splitPath = currentDirectory.split(path.sep);
-
-  // Remove trailing \
-  if (splitPath[splitPath.length - 1] === "") {
-    splitPath.pop();
-  }
-
-  // Rebuild path
-  const result = splitPath.join(path.sep);
-
-  // Determines whether we're already in the features directory or not
-  const isDirectoryAlreadyFeatures =
-    splitPath[splitPath.length - 1] === "features";
-
-  // If already return the current directory if not, return the current directory with the /features append to it
-  return isDirectoryAlreadyFeatures ? result : path.join(result, "features");
-}
-
-export async function createDirectories(
-  targetDirectory: string,
-  childDirectories: string[]
-): Promise<void> {
-  // Create the parent directory
-  await createDirectory(targetDirectory);
-  // Creat the children
-  childDirectories.map(
-    async (directory) =>
-      await createDirectory(path.join(targetDirectory, directory))
-  );
-}
-
-function createDirectory(targetDirectory: string): Promise<void> {
-  return new Promise((resolve, reject) => {
-    mkdirp(targetDirectory, (error) => {
-      if (error) {
-        return reject(error);
-      }
-      resolve();
-    });
-  });
-}
 
 function createBlocEventTemplate(
   blocName: string,
@@ -559,7 +676,8 @@ function createNotifierStateTemplate(
 function createNotifierTemplate(
   blocName: string,
   targetDirectory: string,
-  useEquatable: boolean
+  useEquatable: boolean,
+  actionsName: string[],
 ) {
   const snakeCaseBlocName = changeCase.snakeCase(blocName);
   const targetPath = `${targetDirectory}/notifier/${snakeCaseBlocName}_notifier.dart`;
@@ -569,7 +687,7 @@ function createNotifierTemplate(
   return new Promise(async (resolve, reject) => {
     writeFile(
       targetPath,
-      getNotifierTemplate(blocName, useEquatable),
+      getNotifierTemplate(blocName, useEquatable, actionsName),
       "utf8",
       (error) => {
         if (error) {
@@ -595,6 +713,31 @@ function createParamTemplate(
     writeFile(
       targetPath,
       getParamTemplate(paramName),
+      "utf8",
+      (error) => {
+        if (error) {
+          reject(error);
+          return;
+        }
+        resolve(true);
+      }
+    );
+  });
+}
+
+function createUsecaseTemplate(
+  targetDirectory: string,
+  usecaseName: string,
+  repositoryName: string,
+) {
+  const targetPath = `${targetDirectory}/usecases/${changeCase.snakeCase(usecaseName)}_usecase.dart`;
+  if (existsSync(targetPath)) {
+    throw Error(`${changeCase.snakeCase(usecaseName)}_usecase.dart already exists`);
+  }
+  return new Promise(async (resolve, reject) => {
+    writeFile(
+      targetPath,
+      getUsecaseTemplate(repositoryName, usecaseName),
       "utf8",
       (error) => {
         if (error) {
@@ -635,7 +778,8 @@ function createRepositoryTemplate(
 
 function createRepositoryImplTemplate(
   featureName: string,
-  targetDirectory: string
+  targetDirectory: string,
+  actionsName: string[]
 ) {
   const snakeCaseFeatureName = changeCase.snakeCase(featureName);
   const targetPath = `${targetDirectory}/repositories/${snakeCaseFeatureName}_repository_impl.dart`;
@@ -645,7 +789,7 @@ function createRepositoryImplTemplate(
   return new Promise(async (resolve, reject) => {
     writeFile(
       targetPath,
-      getRepositoryImplTemplate(featureName),
+      getRepositoryImplTemplate(featureName, actionsName),
       "utf8",
       (error) => {
         if (error) {
@@ -738,6 +882,7 @@ function createRemoteDatasourceTemplate(
 function createRemoteDatasourceImplTemplate(
   featureName: string,
   targetDirectory: string,
+  actionsName: string[],
 ) {
   const snakeCaseFeatureName = changeCase.snakeCase(featureName);
   const targetPath = `${targetDirectory}/datasources/${snakeCaseFeatureName}_remote_datasource_impl.dart`;
@@ -747,7 +892,7 @@ function createRemoteDatasourceImplTemplate(
   return new Promise(async (resolve, reject) => {
     writeFile(
       targetPath,
-      getRemoteDatasourceImplTemplate(snakeCaseFeatureName),
+      getRemoteDatasourceImplTemplate(snakeCaseFeatureName, actionsName),
       "utf8",
       (error) => {
         if (error) {
