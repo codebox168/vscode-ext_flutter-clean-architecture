@@ -26,7 +26,7 @@ import { analyzeDependencies } from "./utils";
 export function activate(_context: ExtensionContext) {
   analyzeDependencies();
 
-  commands.registerCommand("extension.new-feature-bloc", async (uri: Uri) => {
+  commands.registerCommand("extension.new-feature", async (uri: Uri) => {
     Go(uri);
   });
 }
@@ -117,7 +117,7 @@ export function getFeaturesDirectoryPath(currentDirectory: string): string {
     splitPath[splitPath.length - 1] === "features";
 
   // If already return the current directory if not, return the current directory with the /features append to it
-  return isDirectoryAlreadyFeatures ? result : path.join(result, "features");
+  return isDirectoryAlreadyFeatures ? result : path.join(result, "");
 }
 
 export async function promptForTargetDirectory(): Promise<string | undefined> {
@@ -294,9 +294,9 @@ function createIDatasourceTemplate(
   targetDirectory: string,
   actionsName: string[],
 ) {
-  const targetPath = `${targetDirectory}/datasources/I${changeCase.camelCase(featureName)}Datasource.dart`;
+  const targetPath = `${targetDirectory}/datasources/I${changeCase.pascalCase(featureName)}Datasource.ts`;
   if (existsSync(targetPath)) {
-    throw Error(`I${changeCase.camelCase(featureName)}Datasource.dart already exists`);
+    throw Error(`I${changeCase.camelCase(featureName)}Datasource.ts already exists`);
   }
   return new Promise(async (resolve, reject) => {
     writeFile(
@@ -318,9 +318,9 @@ function createDatasourceTemplate(
   featureName: string,
   targetDirectory: string,
 ) {
-  const targetPath = `${targetDirectory}/datasources/${changeCase.camelCase(featureName)}Datasource.dart`;
+  const targetPath = `${targetDirectory}/datasources/${changeCase.camelCase(featureName)}Datasource.ts`;
   if (existsSync(targetPath)) {
-    throw Error(`${changeCase.camelCase(featureName)}Datasource.dart already exists`);
+    throw Error(`${changeCase.camelCase(featureName)}Datasource.ts already exists`);
   }
   return new Promise(async (resolve, reject) => {
     writeFile(
@@ -466,7 +466,7 @@ async function generateControllerCode(
   targetDirectory: string,
   actionsName: string[]
 ) {
-  const repositoryDirectoryPath = `${targetDirectory}/repositories`;
+  const repositoryDirectoryPath = `${targetDirectory}/controllers`;
   if (!existsSync(repositoryDirectoryPath)) {
     await createDirectory(repositoryDirectoryPath);
   }

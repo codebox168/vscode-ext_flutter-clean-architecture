@@ -26,7 +26,7 @@ import ${changeCase.pascalCase(controllerName)}Datasource from "../../data/datas
 import ${changeCase.pascalCase(controllerName)}Repository from "../../data/repositories/${changeCase.camelCase(controllerName)}Repository";
 ${imports}
 
-const ${changeCase.camelCase(controllerName)}Datasource: I${changeCase.pascalCase(controllerName)}Datasource = new ${changeCase.pascalCase(controllerName)}Datasource(${changeCase.pascalCase(controllerName)}Model, new JWT());
+const ${changeCase.camelCase(controllerName)}Datasource: I${changeCase.pascalCase(controllerName)}Datasource = new ${changeCase.pascalCase(controllerName)}Datasource();
 const ${changeCase.camelCase(controllerName)}Repository: I${changeCase.pascalCase(controllerName)}Repository = new ${changeCase.pascalCase(controllerName)}Repository(${changeCase.camelCase(controllerName)}Datasource);
 ${usecases}
 

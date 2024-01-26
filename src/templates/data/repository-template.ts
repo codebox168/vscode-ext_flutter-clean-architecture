@@ -12,7 +12,7 @@ export function getRepositoryTemplate(repositoryName: string, methodsName: strin
       methods +=`
     async ${changeCase.camelCase(methodName)}(params: Param${changeCase.pascalCase(methodName)}): Promise<Entity | Failure> {
         try {
-            return await this.${changeCase.camelCase(methodName)}Datasource.${changeCase.camelCase(methodName)}(params);
+            return await this.${changeCase.camelCase(repositoryName)}Datasource.${changeCase.camelCase(methodName)}(params);
         } catch (error) {
             if (error instanceof Exeception) {
                 return error.toFailure();
