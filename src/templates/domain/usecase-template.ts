@@ -13,7 +13,7 @@ export default class ${changeCase.pascalCase(usecaseName)}Usecase implements Use
         this.${changeCase.camelCase(repositoryName)}Repository = ${changeCase.camelCase(repositoryName)}Repository;
     }
     execute(param: Param${changeCase.pascalCase(usecaseName)}): Promise<Entity | Failure> {
-        return this.${changeCase.camelCase(repositoryName)}Repository.login(param);
+        return this.${changeCase.camelCase(repositoryName)}Repository.${changeCase.camelCase(usecaseName)}(param);
     }
 }
 `;

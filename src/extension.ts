@@ -253,9 +253,9 @@ async function generateRepositoryImplCode(
     await createDirectory(repositoryDirectoryPath);
   }
 
-  const targetPath = `${targetDirectory}/repositories/${changeCase.camelCase(repositoryName)}Repository.ts`;
+  const targetPath = `${targetDirectory}/repositories/${changeCase.dotCase(repositoryName)}.repository.ts`;
   if (existsSync(targetPath)) {
-    throw Error(`${changeCase.camelCase(repositoryName)}Repository.ts already exists`);
+    throw Error(`${changeCase.dotCase(repositoryName)}.repository.ts already exists`);
   }
   return new Promise(async (resolve, reject) => {
     writeFile(
@@ -294,9 +294,9 @@ function createIDatasourceTemplate(
   targetDirectory: string,
   actionsName: string[],
 ) {
-  const targetPath = `${targetDirectory}/datasources/I${changeCase.pascalCase(featureName)}Datasource.ts`;
+  const targetPath = `${targetDirectory}/datasources/I${changeCase.dotCase(featureName)}.datasource.ts`;
   if (existsSync(targetPath)) {
-    throw Error(`I${changeCase.camelCase(featureName)}Datasource.ts already exists`);
+    throw Error(`I${changeCase.dotCase(featureName)}.datasource.ts already exists`);
   }
   return new Promise(async (resolve, reject) => {
     writeFile(
@@ -318,9 +318,9 @@ function createDatasourceTemplate(
   featureName: string,
   targetDirectory: string,
 ) {
-  const targetPath = `${targetDirectory}/datasources/${changeCase.camelCase(featureName)}Datasource.ts`;
+  const targetPath = `${targetDirectory}/datasources/${changeCase.dotCase(featureName)}.datasource.ts`;
   if (existsSync(targetPath)) {
-    throw Error(`${changeCase.camelCase(featureName)}Datasource.ts already exists`);
+    throw Error(`${changeCase.dotCase(featureName)}.datasource.ts already exists`);
   }
   return new Promise(async (resolve, reject) => {
     writeFile(
@@ -347,9 +347,9 @@ async function generateModelCode(
     await createDirectory(modelsDirectoryPath);
   }
 
-  const targetPath = `${targetDirectory}/models/${changeCase.camelCase(modelName)}Model.ts`;
+  const targetPath = `${targetDirectory}/models/${changeCase.dotCase(modelName)}.model.ts`;
   if (existsSync(targetPath)) {
-    throw Error(`${changeCase.camelCase(modelName)}Model.ts already exists`);
+    throw Error(`${changeCase.dotCase(modelName)}.model.ts already exists`);
   }
   return new Promise(async (resolve, reject) => {
     writeFile(
@@ -380,9 +380,9 @@ async function generateRepositoryCode(
     await createDirectory(repositoryDirectoryPath);
   }
 
-  const targetPath = `${targetDirectory}/repositories/I${changeCase.pascalCase(repositoryName)}Repository.ts`;
+  const targetPath = `${targetDirectory}/repositories/I${changeCase.dotCase(repositoryName)}.repository.ts`;
   if (existsSync(targetPath)) {
-    throw Error(`I${changeCase.pascalCase(repositoryName)}Repository.ts already exists`);
+    throw Error(`I${changeCase.dotCase(repositoryName)}.repository.ts already exists`);
   }
   return new Promise(async (resolve, reject) => {
     writeFile(
@@ -408,9 +408,9 @@ async function generateParamCode(
   if (!existsSync(paramsDirectoryPath)) {
     await createDirectory(paramsDirectoryPath);
   }
-  const targetPath = `${targetDirectory}/params/param${changeCase.pascalCase(paramName)}.ts`;
+  const targetPath = `${targetDirectory}/params/param.${changeCase.dotCase(paramName)}.ts`;
   if (existsSync(targetPath)) {
-    throw Error(`param${changeCase.pascalCase(paramName)}.ts already exists`);
+    throw Error(`param.${changeCase.dotCase(paramName)}.ts already exists`);
   }
   return new Promise(async (resolve, reject) => {
     writeFile(
@@ -437,9 +437,9 @@ async function generateUsecaseCode(
   if (!existsSync(usecasesDirectoryPath)) {
     await createDirectory(usecasesDirectoryPath);
   }
-  const targetPath = `${targetDirectory}/usecases/${changeCase.camelCase(usecaseName)}Usecase.ts`;
+  const targetPath = `${targetDirectory}/usecases/${changeCase.dotCase(usecaseName)}.usecase.ts`;
   if (existsSync(targetPath)) {
-    throw Error(`${changeCase.camelCase(usecaseName)}Usecase.ts already exists`);
+    throw Error(`${changeCase.dotCase(usecaseName)}.usecase.ts already exists`);
   }
   return new Promise(async (resolve, reject) => {
     writeFile(
@@ -471,9 +471,9 @@ async function generateControllerCode(
     await createDirectory(repositoryDirectoryPath);
   }
 
-  const targetPath = `${targetDirectory}/controllers/${changeCase.camelCase(featureName)}Controller.ts`;
+  const targetPath = `${targetDirectory}/controllers/${changeCase.dotCase(featureName)}.controller.ts`;
   if (existsSync(targetPath)) {
-    throw Error(`${changeCase.camelCase(featureName)}Controller.ts already exists`);
+    throw Error(`${changeCase.dotCase(featureName)}.controller.ts already exists`);
   }
   return new Promise(async (resolve, reject) => {
     writeFile(
