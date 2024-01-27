@@ -17,9 +17,11 @@ import {
   getControllerTemplate,
   getDatasourceImplTemplate,
   getDatasourceTemplate,
+  getEntityTemplate,
   getIRepositoryTemplate,
+  getMiddlewareTemplate,
   getModelTemplate,
-  getParamTemplate, getRepositoryTemplate, getUsecaseTemplate,
+  getParamTemplate, getRepositoryTemplate, getRouteTemplate, getUsecaseTemplate,
 } from "./templates";
 import { analyzeDependencies } from "./utils";
 
@@ -216,6 +218,8 @@ export async function generateFeatureArchitecture(
   ]);
   // Generate the repository in the domain layer
   await generateRepositoryCode(featureName, domainDirectoryPath, actionsName);
+  // Generate the Entity in the domain layer
+  await generateEntityCode(featureName, domainDirectoryPath);
   // Generate the param in the domain layer
   for (let paramName of actionsName) {
     await generateParamCode(domainDirectoryPath, paramName);
@@ -236,8 +240,15 @@ export async function generateFeatureArchitecture(
     "graphql",
     "routes",
   ]);
-  // Generate the repository in the domain layer
+  // Generate the controller in the presentation layer
   await generateControllerCode(featureName, presentationDirectoryPath, actionsName);
+  // Generate the route in the presentation layer
+  await generateRouteCode(featureName, presentationDirectoryPath, actionsName);
+  // Generate the middlewares in the presentation layer
+  for (let middlewareName of actionsName) {
+    await generateMiddlewareCode(presentationDirectoryPath, middlewareName);
+  }
+
 }
 
 // ==============================
@@ -400,6 +411,35 @@ async function generateRepositoryCode(
   });
 }
 
+async function generateEntityCode(
+  entityName: string,
+  targetDirectory: string
+) {
+  const repositoryDirectoryPath = `${targetDirectory}/entities`;
+  if (!existsSync(repositoryDirectoryPath)) {
+    await createDirectory(repositoryDirectoryPath);
+  }
+
+  const targetPath = `${targetDirectory}/entities/${changeCase.dotCase(entityName)}.entity.ts`;
+  if (existsSync(targetPath)) {
+    throw Error(`I${changeCase.dotCase(entityName)}.entity.ts already exists`);
+  }
+  return new Promise(async (resolve, reject) => {
+    writeFile(
+      targetPath,
+      getEntityTemplate(entityName),
+      "utf8",
+      (error) => {
+        if (error) {
+          reject(error);
+          return;
+        }
+        resolve(true);
+      }
+    );
+  });
+}
+
 async function generateParamCode(
   targetDirectory: string,
   paramName: string
@@ -479,6 +519,65 @@ async function generateControllerCode(
     writeFile(
       targetPath,
       getControllerTemplate(featureName, actionsName),
+      "utf8",
+      (error) => {
+        if (error) {
+          reject(error);
+          return;
+        }
+        resolve(true);
+      }
+    );
+  });
+}
+
+async function generateRouteCode(
+  featureName: string,
+  targetDirectory: string,
+  actionsName: string[]
+) {
+  const repositoryDirectoryPath = `${targetDirectory}/routes`;
+  if (!existsSync(repositoryDirectoryPath)) {
+    await createDirectory(repositoryDirectoryPath);
+  }
+
+  const targetPath = `${targetDirectory}/routes/${changeCase.dotCase(featureName)}.routes.ts`;
+  if (existsSync(targetPath)) {
+    throw Error(`${changeCase.dotCase(featureName)}.routes.ts already exists`);
+  }
+  return new Promise(async (resolve, reject) => {
+    writeFile(
+      targetPath,
+      getRouteTemplate(featureName, actionsName),
+      "utf8",
+      (error) => {
+        if (error) {
+          reject(error);
+          return;
+        }
+        resolve(true);
+      }
+    );
+  });
+}
+
+async function generateMiddlewareCode(
+  targetDirectory: string,
+  actionName: string
+) {
+  const middlewareDirectoryPath = `${targetDirectory}/middlewares`;
+  if (!existsSync(middlewareDirectoryPath)) {
+    await createDirectory(middlewareDirectoryPath);
+  }
+
+  const targetPath = `${targetDirectory}/middlewares/${changeCase.dotCase(actionName)}.middleware.ts`;
+  if (existsSync(targetPath)) {
+    throw Error(`${changeCase.dotCase(actionName)}.middleware.ts already exists`);
+  }
+  return new Promise(async (resolve, reject) => {
+    writeFile(
+      targetPath,
+      getMiddlewareTemplate(),
       "utf8",
       (error) => {
         if (error) {

@@ -7,14 +7,15 @@ export function getIRepositoryTemplate(repositoryName: string, methodsName: stri
   let imports = '';
 
   for (let methodName of methodsName) {
-    imports+=`import Param${changeCase.pascalCase(methodName)} from "../params/param${changeCase.pascalCase(methodName)}";
+    imports+=`import Param${changeCase.pascalCase(methodName)} from "../params/param.${changeCase.dotCase(methodName)}";
 `;
     methods +=`
-    ${changeCase.camelCase(methodName)}(params: Param${pascalCaseRepositoryName}): Promise<Entity | Failure>
+    ${changeCase.camelCase(methodName)}(params: Param${changeCase.pascalCase(methodName)}): Promise<${changeCase.pascalCase(repositoryName)}Entity | Failure>
 `;
   }
 
   return `import { Failure } from "../../../core/errors/failure";
+import ${changeCase.pascalCase(repositoryName)}Entity from "../entities/${changeCase.dotCase(repositoryName)}.entity";
 ${imports}
 
 export default interface I${pascalCaseRepositoryName}Repository {

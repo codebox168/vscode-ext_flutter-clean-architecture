@@ -5,3 +5,6 @@ export * from "./domain/i-repository-template";
 export * from "./domain/param-template";
 export * from "./domain/usecase-template";
 export * from "./presentation/controller-template";
+export * from "./presentation/middleware-template";
+export * from "./presentation/route-template";
+export * from "./domain/entity-template"

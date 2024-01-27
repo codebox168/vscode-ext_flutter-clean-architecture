@@ -4,7 +4,7 @@ export function getModelTemplate(modelName: string): string {
     const pascalCaseModelName = changeCase.pascalCase(modelName);
     const snakeCaseModelName = changeCase.snakeCase(modelName);
     return `import { DataTypes, Model } from "sequelize";
-import dbConnection from "../../../core/utils/dbConnection"
+import dbConnection from "../../../core/utils/db.connection"
 class ${pascalCaseModelName}Model extends Model { }
 ${pascalCaseModelName}Model.init({
     fieldName: {
