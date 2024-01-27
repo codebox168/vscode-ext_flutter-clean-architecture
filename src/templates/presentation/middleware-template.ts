@@ -1,7 +1,7 @@
 export function getMiddlewareTemplate(): string {
-    return `import { Request, Response } from "express";
+    return `import { NextFunction, Request, Response } from "express";
 import Validator from "fastest-validator";
-export default function (req: Request, res: Response) {
+export default function (req: Request, res: Response, next: NextFunction) {
     const validator = new Validator();
     const schema = {
         fieldName: "string"
@@ -9,7 +9,7 @@ export default function (req: Request, res: Response) {
 
     const result = validator.compile(schema)(req.body);
     if (result == true) {
-        return res.status(201).json(req.body);
+        return next();
     } else {
         return res.status(400).json(result)
     }
