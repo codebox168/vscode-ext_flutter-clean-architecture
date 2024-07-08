@@ -14,14 +14,18 @@ import {
 } from "vscode";
 import { existsSync, lstatSync, writeFile } from "fs";
 import {
-  getControllerTemplate,
   getDatasourceImplTemplate,
   getDatasourceTemplate,
   getEntityTemplate,
+  getGrpcServerTemplate,
+  getGrpcServiceTemplate,
+  getHttpServerTemplate,
   getIRepositoryTemplate,
-  getMiddlewareTemplate,
-  getModelTemplate,
-  getParamTemplate, getRepositoryTemplate, getRouteTemplate, getUsecaseTemplate,
+  getModelTemplate, 
+  getRepositoryTemplate, 
+  getRequestDtoTemplate, 
+  getResponseDtoTemplate, 
+  getRouteTemplate,
 } from "./templates";
 import { analyzeDependencies } from "./utils";
 
@@ -116,7 +120,7 @@ export function getFeaturesDirectoryPath(currentDirectory: string): string {
 
   // Determines whether we're already in the features directory or not
   const isDirectoryAlreadyFeatures =
-    splitPath[splitPath.length - 1] === "features";
+    splitPath[splitPath.length - 1] === "src";
 
   // If already return the current directory if not, return the current directory with the /features append to it
   return isDirectoryAlreadyFeatures ? result : path.join(result, "");
@@ -190,43 +194,43 @@ export async function generateFeatureArchitecture(
   }
 
   // Create the feature directory
-  const featureDirectoryPath = path.join(featuresDirectoryPath, changeCase.snakeCase(featureName));
+  const featureDirectoryPath = featuresDirectoryPath;
   await createDirectory(featureDirectoryPath);
 
   // Create the data layer
   const dataDirectoryPath = path.join(featureDirectoryPath, "data");
   await createDirectories(dataDirectoryPath, [
     "datasources",
-    "models",
-    "repositories",
+    // "models",
+    "repositories_impl",
   ]);
   // Generate the repository in the data layer
   await generateRepositoryImplCode(featureName, dataDirectoryPath, actionsName);
   // Generate the datasource in the data layer
   await generateDatasourceCode(featureName, dataDirectoryPath, actionsName);
   // Genarate the model in the data layer
-  await generateModelCode(featureName, dataDirectoryPath);
+  // await generateModelCode(featureName, dataDirectoryPath);
 
 
   // Create the domain layer
   const domainDirectoryPath = path.join(featureDirectoryPath, "domain");
   await createDirectories(domainDirectoryPath, [
     "entities",
-    "params",
     "repositories",
-    "usecases",
+    "request_dtos",
+    "response_dtos",
   ]);
   // Generate the repository in the domain layer
   await generateRepositoryCode(featureName, domainDirectoryPath, actionsName);
   // Generate the Entity in the domain layer
   await generateEntityCode(featureName, domainDirectoryPath);
   // Generate the param in the domain layer
-  for (let paramName of actionsName) {
-    await generateParamCode(domainDirectoryPath, paramName);
+  for (let requestDtoName of actionsName) {
+    await generateRequestDtoCode(domainDirectoryPath, requestDtoName);
   }
   // Generate the usecase in the domain layer
-  for (let usecaseName of actionsName) {
-    await generateUsecaseCode(featureName, domainDirectoryPath, usecaseName);
+  for (let responseDtoName of actionsName) {
+    await generateResponseDtoCode(domainDirectoryPath, responseDtoName);
   }
 
   // Create the presentation layer
@@ -235,19 +239,16 @@ export async function generateFeatureArchitecture(
     "presentation"
   );
   await createDirectories(presentationDirectoryPath, [
-    "controllers",
-    "middlewares",
-    "graphql",
-    "routes",
+    "grpc_server",
+    "http_server",
+    "graphql_server",
   ]);
-  // Generate the controller in the presentation layer
-  await generateControllerCode(featureName, presentationDirectoryPath, actionsName);
-  // Generate the route in the presentation layer
-  await generateRouteCode(featureName, presentationDirectoryPath, actionsName);
-  // Generate the middlewares in the presentation layer
-  for (let middlewareName of actionsName) {
-    await generateMiddlewareCode(presentationDirectoryPath, middlewareName);
-  }
+  // Generate the grpc server in the presentation layer
+  await generateGrpcServerCode(featureName, presentationDirectoryPath, actionsName);
+  await generateGrpcServiceCode(featureName, presentationDirectoryPath, actionsName);
+  // Generate the http server in the presentation layer
+  await generateHttpServerCode(featureName, presentationDirectoryPath, actionsName);
+  await generateRoutesCode(featureName, presentationDirectoryPath, actionsName);
 
 }
 
@@ -259,14 +260,14 @@ async function generateRepositoryImplCode(
   targetDirectory: string,
   actionsName: string[]
 ) {
-  const repositoryDirectoryPath = `${targetDirectory}/repositories`;
+  const repositoryDirectoryPath = `${targetDirectory}/repositories_impl`;
   if (!existsSync(repositoryDirectoryPath)) {
     await createDirectory(repositoryDirectoryPath);
   }
 
-  const targetPath = `${targetDirectory}/repositories/${changeCase.dotCase(repositoryName)}.repository.ts`;
+  const targetPath = `${targetDirectory}/repositories_impl/${changeCase.snakeCase(repositoryName)}_repository_impl.go`;
   if (existsSync(targetPath)) {
-    throw Error(`${changeCase.dotCase(repositoryName)}.repository.ts already exists`);
+    throw Error(`${changeCase.snakeCase(repositoryName)}_repository_impl.go already exists`);
   }
   return new Promise(async (resolve, reject) => {
     writeFile(
@@ -295,8 +296,8 @@ async function generateDatasourceCode(
   }
 
   await Promise.all([
-    createIDatasourceTemplate(localDatasourceName, targetDirectory, actionsName),
-    createDatasourceTemplate(localDatasourceName, targetDirectory),
+    // createIDatasourceTemplate(localDatasourceName, targetDirectory, actionsName),
+    createDatasourceTemplate(localDatasourceName, targetDirectory,actionsName),
   ]);
 }
 
@@ -326,17 +327,16 @@ function createIDatasourceTemplate(
 }
 
 function createDatasourceTemplate(
-  featureName: string,
-  targetDirectory: string,
+featureName: string, targetDirectory: string, actionsName: string[],
 ) {
-  const targetPath = `${targetDirectory}/datasources/${changeCase.dotCase(featureName)}.datasource.ts`;
+  const targetPath = `${targetDirectory}/datasources/${changeCase.snakeCase(featureName)}_datasource.go`;
   if (existsSync(targetPath)) {
-    throw Error(`${changeCase.dotCase(featureName)}.datasource.ts already exists`);
+    throw Error(`${changeCase.snakeCase(featureName)}_datasource.go already exists`);
   }
   return new Promise(async (resolve, reject) => {
     writeFile(
       targetPath,
-      getDatasourceImplTemplate(featureName),
+      getDatasourceImplTemplate(featureName,actionsName),
       "utf8",
       (error) => {
         if (error) {
@@ -391,9 +391,9 @@ async function generateRepositoryCode(
     await createDirectory(repositoryDirectoryPath);
   }
 
-  const targetPath = `${targetDirectory}/repositories/I${changeCase.dotCase(repositoryName)}.repository.ts`;
+  const targetPath = `${targetDirectory}/repositories/${changeCase.snakeCase(repositoryName)}_repository.go`;
   if (existsSync(targetPath)) {
-    throw Error(`I${changeCase.dotCase(repositoryName)}.repository.ts already exists`);
+    throw Error(`${changeCase.snakeCase(repositoryName)}_repository.go already exists`);
   }
   return new Promise(async (resolve, reject) => {
     writeFile(
@@ -420,9 +420,9 @@ async function generateEntityCode(
     await createDirectory(repositoryDirectoryPath);
   }
 
-  const targetPath = `${targetDirectory}/entities/${changeCase.dotCase(entityName)}.entity.ts`;
+  const targetPath = `${targetDirectory}/entities/${changeCase.snakeCase(entityName)}_entity.go`;
   if (existsSync(targetPath)) {
-    throw Error(`I${changeCase.dotCase(entityName)}.entity.ts already exists`);
+    throw Error(`${changeCase.snakeCase(entityName)}_entity.go already exists`);
   }
   return new Promise(async (resolve, reject) => {
     writeFile(
@@ -440,22 +440,22 @@ async function generateEntityCode(
   });
 }
 
-async function generateParamCode(
+async function generateRequestDtoCode(
   targetDirectory: string,
-  paramName: string
+  requestDtoName: string
 ) {
-  const paramsDirectoryPath = `${targetDirectory}/params`;
+  const paramsDirectoryPath = `${targetDirectory}/request_dtos`;
   if (!existsSync(paramsDirectoryPath)) {
     await createDirectory(paramsDirectoryPath);
   }
-  const targetPath = `${targetDirectory}/params/param.${changeCase.dotCase(paramName)}.ts`;
+  const targetPath = `${targetDirectory}/request_dtos/${changeCase.snakeCase(requestDtoName)}_dto.go`;
   if (existsSync(targetPath)) {
-    throw Error(`param.${changeCase.dotCase(paramName)}.ts already exists`);
+    throw Error(`${changeCase.snakeCase(requestDtoName)}_dto.go already exists`);
   }
   return new Promise(async (resolve, reject) => {
     writeFile(
       targetPath,
-      getParamTemplate(paramName),
+      getRequestDtoTemplate(requestDtoName),
       "utf8",
       (error) => {
         if (error) {
@@ -468,23 +468,22 @@ async function generateParamCode(
   });
 }
 
-async function generateUsecaseCode(
-  featureName: string,
+async function generateResponseDtoCode(
   targetDirectory: string,
-  usecaseName: string
+  responseDto: string
 ) {
-  const usecasesDirectoryPath = `${targetDirectory}/usecases`;
-  if (!existsSync(usecasesDirectoryPath)) {
-    await createDirectory(usecasesDirectoryPath);
+  const responseDtosDirectoryPath = `${targetDirectory}/response_dtos`;
+  if (!existsSync(responseDtosDirectoryPath)) {
+    await createDirectory(responseDtosDirectoryPath);
   }
-  const targetPath = `${targetDirectory}/usecases/${changeCase.dotCase(usecaseName)}.usecase.ts`;
+  const targetPath = `${targetDirectory}/response_dtos/${changeCase.snakeCase(responseDto)}_dto.go`;
   if (existsSync(targetPath)) {
-    throw Error(`${changeCase.dotCase(usecaseName)}.usecase.ts already exists`);
+    throw Error(`${changeCase.snakeCase(responseDto)}_dto.go already exists`);
   }
   return new Promise(async (resolve, reject) => {
     writeFile(
       targetPath,
-      getUsecaseTemplate(featureName, usecaseName),
+      getResponseDtoTemplate(responseDto),
       "utf8",
       (error) => {
         if (error) {
@@ -501,24 +500,24 @@ async function generateUsecaseCode(
 // genarate file in presentation layer
 // =====================================
 
-async function generateControllerCode(
+async function generateGrpcServerCode(
   featureName: string,
   targetDirectory: string,
-  actionsName: string[]
+  actionsName: string[],
 ) {
-  const repositoryDirectoryPath = `${targetDirectory}/controllers`;
-  if (!existsSync(repositoryDirectoryPath)) {
-    await createDirectory(repositoryDirectoryPath);
+  const grpcServerDirectoryPath = `${targetDirectory}/grpc_server`;
+  if (!existsSync(grpcServerDirectoryPath)) {
+    await createDirectory(grpcServerDirectoryPath);
   }
 
-  const targetPath = `${targetDirectory}/controllers/${changeCase.dotCase(featureName)}.controller.ts`;
+  const targetPath = `${targetDirectory}/grpc_server/grpc_server.go`;
   if (existsSync(targetPath)) {
-    throw Error(`${changeCase.dotCase(featureName)}.controller.ts already exists`);
+    throw Error(`grpc_server.go already exists`);
   }
   return new Promise(async (resolve, reject) => {
     writeFile(
       targetPath,
-      getControllerTemplate(featureName, actionsName),
+      getGrpcServerTemplate(featureName),
       "utf8",
       (error) => {
         if (error) {
@@ -531,24 +530,24 @@ async function generateControllerCode(
   });
 }
 
-async function generateRouteCode(
+async function generateGrpcServiceCode(
   featureName: string,
   targetDirectory: string,
-  actionsName: string[]
+  actionsName: string[],
 ) {
-  const repositoryDirectoryPath = `${targetDirectory}/routes`;
-  if (!existsSync(repositoryDirectoryPath)) {
-    await createDirectory(repositoryDirectoryPath);
+  const grpcServiceDirectoryPath = `${targetDirectory}/grpc_server/grpc_services`;
+  if (!existsSync(grpcServiceDirectoryPath)) {
+    await createDirectory(grpcServiceDirectoryPath);
   }
 
-  const targetPath = `${targetDirectory}/routes/${changeCase.dotCase(featureName)}.routes.ts`;
+  const targetPath = `${targetDirectory}/grpc_server/grpc_services/${changeCase.snakeCase(featureName)}_service.go`;
   if (existsSync(targetPath)) {
-    throw Error(`${changeCase.dotCase(featureName)}.routes.ts already exists`);
+    throw Error(`grpc_server.go already exists`);
   }
   return new Promise(async (resolve, reject) => {
     writeFile(
       targetPath,
-      getRouteTemplate(featureName, actionsName),
+      getGrpcServiceTemplate(featureName,actionsName),
       "utf8",
       (error) => {
         if (error) {
@@ -561,23 +560,54 @@ async function generateRouteCode(
   });
 }
 
-async function generateMiddlewareCode(
+async function generateHttpServerCode(
+  featureName: string,
   targetDirectory: string,
-  actionName: string
+  actionsName: string[]
 ) {
-  const middlewareDirectoryPath = `${targetDirectory}/middlewares`;
-  if (!existsSync(middlewareDirectoryPath)) {
-    await createDirectory(middlewareDirectoryPath);
+  const httpServerDirectoryPath = `${targetDirectory}/http_server`;
+  if (!existsSync(httpServerDirectoryPath)) {
+    await createDirectory(httpServerDirectoryPath);
   }
 
-  const targetPath = `${targetDirectory}/middlewares/${changeCase.dotCase(actionName)}.middleware.ts`;
+  const targetPath = `${targetDirectory}/http_server/http_server.go`;
   if (existsSync(targetPath)) {
-    throw Error(`${changeCase.dotCase(actionName)}.middleware.ts already exists`);
+    throw Error(`http_server.go already exists`);
   }
   return new Promise(async (resolve, reject) => {
     writeFile(
       targetPath,
-      getMiddlewareTemplate(),
+      getHttpServerTemplate(featureName),
+      "utf8",
+      (error) => {
+        if (error) {
+          reject(error);
+          return;
+        }
+        resolve(true);
+      }
+    );
+  });
+}
+
+async function generateRoutesCode(
+  featureName: string,
+  targetDirectory: string,
+  actionsName: string[]
+) {
+  const routesDirectoryPath = `${targetDirectory}/http_server/routes`;
+  if (!existsSync(routesDirectoryPath)) {
+    await createDirectory(routesDirectoryPath);
+  }
+
+  const targetPath = `${targetDirectory}/http_server/routes/${changeCase.snakeCase(featureName)}_route.go`;
+  if (existsSync(targetPath)) {
+    throw Error(`${changeCase.snakeCase(featureName)}_route.go already exists`);
+  }
+  return new Promise(async (resolve, reject) => {
+    writeFile(
+      targetPath,
+      getRouteTemplate(featureName,actionsName),
       "utf8",
       (error) => {
         if (error) {

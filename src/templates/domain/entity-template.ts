@@ -1,8 +1,10 @@
 import * as changeCase from "change-case";
 
-export function getEntityTemplate(EntityName: string): string {
-    return `export default interface ${changeCase.pascalCase(EntityName)}Entity {
-    readonly property: string;
+export function getEntityTemplate(entityName: string): string {
+    return `package entities
+
+type ${changeCase.pascalCase(entityName)}Entiry struct {
+	Id string \`json:"id" bson:"_id"\`
 }
 `;
 }

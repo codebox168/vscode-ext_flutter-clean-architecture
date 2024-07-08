@@ -1,24 +1,22 @@
 import * as changeCase from "change-case";
 
 export function getIRepositoryTemplate(repositoryName: string, methodsName: string[]): string {
-  const pascalCaseRepositoryName = changeCase.pascalCase(repositoryName);
-
   let methods = '';
-  let imports = '';
 
   for (let methodName of methodsName) {
-    imports+=`import Param${changeCase.pascalCase(methodName)} from "../params/param.${changeCase.dotCase(methodName)}";
-`;
-    methods +=`
-    ${changeCase.camelCase(methodName)}(params: Param${changeCase.pascalCase(methodName)}): Promise<${changeCase.pascalCase(repositoryName)}Entity | Failure>
+    methods +=` ${changeCase.pascalCase(methodName)}(${changeCase.camelCase(methodName)}Dto *request_dtos.${changeCase.pascalCase(methodName)}Dto) (*response_dtos.${changeCase.pascalCase(methodName)}Dto, error)
 `;
   }
 
-  return `import { Failure } from "../../../core/errors/failure";
-import ${changeCase.pascalCase(repositoryName)}Entity from "../entities/${changeCase.dotCase(repositoryName)}.entity";
-${imports}
+  return `package repositories
 
-export default interface I${pascalCaseRepositoryName}Repository {
+import (
+	"${changeCase.snakeCase(repositoryName)}.service.com/src/domain/request_dtos"
+	"${changeCase.snakeCase(repositoryName)}.service.com/src/domain/response_dtos"
+)
+
+type ${changeCase.pascalCase(repositoryName)}Repository interface {
+
 ${methods}
 }
 `;

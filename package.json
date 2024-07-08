@@ -1,6 +1,6 @@
 {
-  "name": "express-clean-architecture",
-  "displayName": "express Feature Scaffolding",
+  "name": "go-clean-architecture",
+  "displayName": "Go clean Scaffolding",
   "description": "Add new feature easily with well structured directories (Clean Architecture pattern)",
   "version": "0.0.5",
   "publisher": "CodeBox",
@@ -17,9 +17,9 @@
   ],
   "keywords": [
     "clean-architecture",
-    "node",
-    "bun",
-    "express"
+    "golang",
+    "fiber",
+    "mongo"
   ],
   "icon": "assets/logo.png",
   "activationEvents": [
@@ -32,7 +32,7 @@
       {
         "command": "extension.new-feature",
         "title": "New Feature",
-        "category": "Node Clean Architecture",
+        "category": "Go Clean Architecture",
         "icon": "assets/logo.png"
       }
     ],

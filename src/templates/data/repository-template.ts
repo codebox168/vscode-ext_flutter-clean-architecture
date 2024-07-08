@@ -1,45 +1,35 @@
 import * as changeCase from "change-case";
 
-export function getRepositoryTemplate(repositoryName: string, methodsName: string[]): string {
-    const pascalCaseRepositoryName = changeCase.pascalCase(repositoryName);
-    const dotCaseRepositoryName = changeCase.dotCase(repositoryName);
-  
+export function getRepositoryTemplate(repositoryName: string, methodsName: string[]): string {  
     let methods = '';
-    let imports = '';
   
     for (let methodName of methodsName) {
-      imports+=`import Param${changeCase.pascalCase(methodName)} from "../../domain/params/param.${changeCase.dotCase(methodName)}";
-`;
       methods +=`
-    async ${changeCase.camelCase(methodName)}(params: Param${changeCase.pascalCase(methodName)}): Promise<${changeCase.pascalCase(repositoryName)}Entity | Failure> {
-        try {
-            return await this.${changeCase.camelCase(repositoryName)}Datasource.${changeCase.camelCase(methodName)}(params);
-        } catch (error) {
-            if (error instanceof Exception) {
-                return error.toFailure();
-            } else {
-                return new RepositoryException("" + error).toFailure()
-            }
-        }
-    }
+func (${repositoryName[0].toLowerCase()} *${changeCase.pascalCase(repositoryName)}RepositoryImpl) ${changeCase.pascalCase(methodName)}(${changeCase.camelCase(methodName)}Dto *request_dtos.${changeCase.pascalCase(methodName)}Dto) (*response_dtos.${changeCase.pascalCase(methodName)}Dto, error) {
+	return ${repositoryName[0].toLowerCase()}.${changeCase.camelCase(repositoryName)}Datasource.${changeCase.pascalCase(methodName)}(${changeCase.camelCase(methodName)}Dto)
+}
 `;
     }
   
-    return `import { Exception, RepositoryException } from "../../../core/errors/exception";
-import { Failure } from "../../../core/errors/failure";
-import ${changeCase.pascalCase(repositoryName)}Entity from "../../domain/entities/${changeCase.dotCase(repositoryName)}.entity";
-import I${pascalCaseRepositoryName}Repository from "../../domain/repositories/I${dotCaseRepositoryName}.repository";
-import I${pascalCaseRepositoryName}Datasource from "../datasources/I${dotCaseRepositoryName}.datasource";
-${imports}
+    return `package repositories_impl
 
-export default class ${pascalCaseRepositoryName}Repository implements I${pascalCaseRepositoryName}Repository {
-  private ${changeCase.camelCase(repositoryName)}Datasource: I${pascalCaseRepositoryName}Datasource;
+import (
+	"${changeCase.snakeCase(repositoryName)}.service.com/src/data/datasources"
+	"${changeCase.snakeCase(repositoryName)}.service.com/src/domain/repositories"
+	"${changeCase.snakeCase(repositoryName)}.service.com/src/domain/request_dtos"
+	"${changeCase.snakeCase(repositoryName)}.service.com/src/domain/response_dtos"
+)
 
-  constructor(${changeCase.camelCase(repositoryName)}Datasource: I${pascalCaseRepositoryName}Datasource) {
-    this.${changeCase.camelCase(repositoryName)}Datasource = ${changeCase.camelCase(repositoryName)}Datasource;
-  }
-
-  ${methods}
+type ${changeCase.pascalCase(repositoryName)}RepositoryImpl struct {
+	${changeCase.camelCase(repositoryName)}Datasource *datasources.${changeCase.pascalCase(repositoryName)}MongoDatasource
 }
+${methods}
+
+func New(${changeCase.camelCase(repositoryName)}Datasource *datasources.${changeCase.pascalCase(repositoryName)}MongoDatasource) repositories.${changeCase.pascalCase(repositoryName)}Repository {
+	return &${changeCase.pascalCase(repositoryName)}RepositoryImpl{
+		${changeCase.camelCase(repositoryName)}Datasource: ${changeCase.camelCase(repositoryName)}Datasource,
+	}
+}
+
 `;
   }
