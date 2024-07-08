@@ -1,7 +1,7 @@
 import * as changeCase from "change-case";
 
 export function getGrpcServerTemplate(grpcServerName: string): string {
-    return `package grpc_server
+	return `package grpc_server
 
 import (
 	"log"
@@ -17,7 +17,7 @@ func StartGrpcServer() {
 		log.Fatalf("Failed to listen: %v", err)
 	}
 	grpcServer := grpc.NewServer()
-	grpc_sevices.Register${changeCase.pascalCase(grpcServerName)}GrpcServiceServer(grpcServer, &grpc_sevices.${changeCase.pascalCase(grpcServerName)}GrpcServer{})
+	grpc_sevices.Register${changeCase.pascalCase(grpcServerName)}GrpcServiceServer(grpcServer, &grpc_sevices.${changeCase.pascalCase(grpcServerName)}GrpcService{})
 	if err := grpcServer.Serve(lis); err != nil {
 		log.Fatalf("Failed to serve grpc in port :50051 %v", err)
 	}

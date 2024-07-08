@@ -16,16 +16,20 @@ import { existsSync, lstatSync, writeFile } from "fs";
 import {
   getDatasourceImplTemplate,
   getDatasourceTemplate,
+  getDbConnectionTemplate,
   getEntityTemplate,
   getGrpcServerTemplate,
   getGrpcServiceTemplate,
   getHttpServerTemplate,
   getIRepositoryTemplate,
-  getModelTemplate, 
-  getRepositoryTemplate, 
-  getRequestDtoTemplate, 
-  getResponseDtoTemplate, 
+  getMainTemplate,
+  getModelTemplate,
+  getProtoTemplate,
+  getRepositoryTemplate,
+  getRequestDtoTemplate,
+  getResponseDtoTemplate,
   getRouteTemplate,
+  getValidateReqDtoTemplate,
 } from "./templates";
 import { analyzeDependencies } from "./utils";
 
@@ -123,7 +127,7 @@ export function getFeaturesDirectoryPath(currentDirectory: string): string {
     splitPath[splitPath.length - 1] === "src";
 
   // If already return the current directory if not, return the current directory with the /features append to it
-  return isDirectoryAlreadyFeatures ? result : path.join(result, "");
+  return isDirectoryAlreadyFeatures ? result : path.join(result, "src");
 }
 
 export async function promptForTargetDirectory(): Promise<string | undefined> {
@@ -187,6 +191,28 @@ export async function generateFeatureArchitecture(
   targetDirectory: string,
   actionsName: string[]
 ) {
+
+  // Generate the validate_req_dto
+  await generateMainCode(featureName, targetDirectory);
+
+  // Create the core directory
+  const coreDirectoryPath = path.join(targetDirectory, 'core');
+  await createDirectory(coreDirectoryPath);
+  // Create sub core
+
+  await createDirectories(coreDirectoryPath, [
+    "errors",
+    "utils",
+    "proto",
+  ]);
+  // Generate the validate_req_dto
+  await generateValidateReqDtoCode(coreDirectoryPath);
+  // Generate the validate_req_dto
+  await generateDbConnectionCode(coreDirectoryPath);
+  // Genarate proto
+  await generateProtoCode(coreDirectoryPath, featureName, actionsName)
+
+
   // Create the features directory if its does not exist yet
   const featuresDirectoryPath = getFeaturesDirectoryPath(targetDirectory);
   if (!existsSync(featuresDirectoryPath)) {
@@ -252,6 +278,126 @@ export async function generateFeatureArchitecture(
 
 }
 
+
+// genarate main
+async function generateMainCode(featureName: string, targetDirectory: string) {
+  const rootDirectoryPath = `${targetDirectory}`;
+  if (!existsSync(rootDirectoryPath)) {
+    await createDirectory(rootDirectoryPath);
+  }
+
+  const targetPath = `${targetDirectory}/main.go`;
+  if (existsSync(targetPath)) {
+    throw Error(`main.go already exists`);
+  }
+  return new Promise(async (resolve, reject) => {
+    writeFile(
+      targetPath,
+      getMainTemplate(featureName),
+      "utf8",
+      (error) => {
+        if (error) {
+          reject(error);
+          return;
+        }
+        resolve(true);
+      }
+    );
+  });
+}
+
+
+// ==============================
+// genarate file in core dir
+// ==============================
+
+async function generateValidateReqDtoCode(
+  targetDirectory: string
+) {
+  const utilsDirectoryPath = `${targetDirectory}/utils`;
+  if (!existsSync(utilsDirectoryPath)) {
+    await createDirectory(utilsDirectoryPath);
+  }
+
+  const targetPath = `${targetDirectory}/utils/validate_req_dto.go`;
+  if (existsSync(targetPath)) {
+    throw Error(`validate_req_dto.go already exists`);
+  }
+  return new Promise(async (resolve, reject) => {
+    writeFile(
+      targetPath,
+      getValidateReqDtoTemplate(),
+      "utf8",
+      (error) => {
+        if (error) {
+          reject(error);
+          return;
+        }
+        resolve(true);
+      }
+    );
+  });
+}
+
+
+async function generateDbConnectionCode(
+  targetDirectory: string
+) {
+  const utilsDirectoryPath = `${targetDirectory}/utils`;
+  if (!existsSync(utilsDirectoryPath)) {
+    await createDirectory(utilsDirectoryPath);
+  }
+
+  const targetPath = `${targetDirectory}/utils/db_connection.go`;
+  if (existsSync(targetPath)) {
+    throw Error(`db_connection.go already exists`);
+  }
+  return new Promise(async (resolve, reject) => {
+    writeFile(
+      targetPath,
+      getDbConnectionTemplate(),
+      "utf8",
+      (error) => {
+        if (error) {
+          reject(error);
+          return;
+        }
+        resolve(true);
+      }
+    );
+  });
+}
+
+async function generateProtoCode(
+  targetDirectory: string,
+  featureName: string,
+  actionsName: string[]
+) {
+  const protoDirectoryPath = `${targetDirectory}/proto`;
+  if (!existsSync(protoDirectoryPath)) {
+    await createDirectory(protoDirectoryPath);
+  }
+
+  const targetPath = `${targetDirectory}/proto/${changeCase.snakeCase(featureName)}.proto`;
+  if (existsSync(targetPath)) {
+    throw Error(`${changeCase.snakeCase(featureName)}.proto already exists`);
+  }
+  return new Promise(async (resolve, reject) => {
+    writeFile(
+      targetPath,
+      getProtoTemplate(featureName, actionsName),
+      "utf8",
+      (error) => {
+        if (error) {
+          reject(error);
+          return;
+        }
+        resolve(true);
+      }
+    );
+  });
+}
+
 // ==============================
 // genarate file in data layer
 // ==============================
@@ -297,7 +443,7 @@ async function generateDatasourceCode(
 
   await Promise.all([
     // createIDatasourceTemplate(localDatasourceName, targetDirectory, actionsName),
-    createDatasourceTemplate(localDatasourceName, targetDirectory,actionsName),
+    createDatasourceTemplate(localDatasourceName, targetDirectory, actionsName),
   ]);
 }
 
@@ -327,7 +473,7 @@ function createIDatasourceTemplate(
 }
 
 function createDatasourceTemplate(
-featureName: string, targetDirectory: string, actionsName: string[],
+  featureName: string, targetDirectory: string, actionsName: string[],
 ) {
   const targetPath = `${targetDirectory}/datasources/${changeCase.snakeCase(featureName)}_datasource.go`;
   if (existsSync(targetPath)) {
@@ -336,7 +482,7 @@ featureName: string, targetDirectory: string, actionsName: string[],
   return new Promise(async (resolve, reject) => {
     writeFile(
       targetPath,
-      getDatasourceImplTemplate(featureName,actionsName),
+      getDatasourceImplTemplate(featureName, actionsName),
       "utf8",
       (error) => {
         if (error) {
@@ -547,7 +693,7 @@ async function generateGrpcServiceCode(
   return new Promise(async (resolve, reject) => {
     writeFile(
       targetPath,
-      getGrpcServiceTemplate(featureName,actionsName),
+      getGrpcServiceTemplate(featureName, actionsName),
       "utf8",
       (error) => {
         if (error) {
@@ -607,7 +753,7 @@ async function generateRoutesCode(
   return new Promise(async (resolve, reject) => {
     writeFile(
       targetPath,
-      getRouteTemplate(featureName,actionsName),
+      getRouteTemplate(featureName, actionsName),
       "utf8",
       (error) => {
         if (error) {

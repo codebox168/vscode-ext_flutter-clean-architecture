@@ -1,14 +1,16 @@
 import * as changeCase from "change-case";
 
-export function getRouteTemplate(featureName: string,routesName:string[]): string {
-    
-let routes = '';
-for (let routeName of routesName) {
-    routes +=`
-    app.Patch("/${changeCase.snakeCase(featureName)}/:${changeCase.snakeCase(featureName)}_id", func(c *fiber.Ctx) error {
+export function getRouteTemplate(featureName: string, routesName: string[]): string {
+
+	let routes = '';
+	for (let routeName of routesName) {
+		routes += `
+    app.Post("/${changeCase.snakeCase(featureName)}/:${changeCase.snakeCase(featureName)}_id", func(c *fiber.Ctx) error {
 		var ${changeCase.camelCase(routeName)}Dto *request_dtos.${changeCase.pascalCase(routeName)}Dto
 		if err := utils.ValidateReqDto(c, ${changeCase.camelCase(routeName)}Dto); err != nil {
-			return err
+			return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{
+				"message": err.Error(),
+			})
 		}
 
 		result, err := ${changeCase.camelCase(featureName)}Repo.${changeCase.pascalCase(routeName)}(${changeCase.camelCase(routeName)}Dto)
@@ -20,11 +22,11 @@ for (let routeName of routesName) {
 		return c.JSON(result)
 	})
   `;
-}
+	}
 
 
 
-    return `package routes
+	return `package routes
 
 import (
 	"github.com/gofiber/fiber/v2"

@@ -4,11 +4,11 @@ export function getGrpcServiceTemplate(grpcServiceName: string, actionsName: str
 
 
 
-    let methods = '';
+	let methods = '';
 
-    for (let methodName of actionsName) {
-      methods += `
-func (s *${changeCase.pascalCase(grpcServiceName)}GrpcServer) ${changeCase.pascalCase(methodName)}(_ context.Context, req *${changeCase.pascalCase(methodName)}Request) (*${changeCase.pascalCase(methodName)}Reply, error) {
+	for (let methodName of actionsName) {
+		methods += `
+func (s *${changeCase.pascalCase(grpcServiceName)}GrpcService) ${changeCase.pascalCase(methodName)}(_ context.Context, req *${changeCase.pascalCase(methodName)}Request) (*${changeCase.pascalCase(methodName)}Reply, error) {
 	result, err := ${changeCase.camelCase(grpcServiceName)}Repo.${changeCase.pascalCase(methodName)}(&request_dtos.${changeCase.pascalCase(methodName)}Dto{})
 	if err != nil {
 		return nil, err
@@ -16,9 +16,9 @@ func (s *${changeCase.pascalCase(grpcServiceName)}GrpcServer) ${changeCase.pasca
 	return &${changeCase.pascalCase(methodName)}Reply{}, nil
 }
   `;
-    }
+	}
 
-    return `package grpc_sevices
+	return `package grpc_sevices
 
 import (
 	context "context"
@@ -34,7 +34,7 @@ var ${changeCase.camelCase(grpcServiceName)}Collection = utils.Client.Database("
 var ${changeCase.camelCase(grpcServiceName)}Datasource *datasources.${changeCase.pascalCase(grpcServiceName)}Datasource = datasources.New(${changeCase.camelCase(grpcServiceName)}Collection)
 var ${changeCase.camelCase(grpcServiceName)}Repo repositories.${changeCase.pascalCase(grpcServiceName)}Repository = repositories_impl.New(${changeCase.camelCase(grpcServiceName)}Datasource)
 
-type ${changeCase.pascalCase(grpcServiceName)}GrpcServer struct {
+type ${changeCase.pascalCase(grpcServiceName)}GrpcService struct {
 	Unimplemented${changeCase.pascalCase(grpcServiceName)}GrpcServiceServer
 }
 

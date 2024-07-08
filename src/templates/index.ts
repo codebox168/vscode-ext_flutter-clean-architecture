@@ -1,3 +1,6 @@
+export * from "./core/utils/validate-req-dto-template"
+export * from "./core/utils/db-connection-template"
+export * from "./core/proto/proto-template"
 export * from "./data/datasource-template";
 export * from "./data/model-template";
 export * from "./data/repository-template";
