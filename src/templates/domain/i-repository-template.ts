@@ -4,7 +4,7 @@ export function getIRepositoryTemplate(repositoryName: string, methodsName: stri
   let methods = '';
 
   for (let methodName of methodsName) {
-    methods +=` ${changeCase.pascalCase(methodName)}(${changeCase.camelCase(methodName)}Dto *request_dtos.${changeCase.pascalCase(methodName)}Dto) (*response_dtos.${changeCase.pascalCase(methodName)}Dto, error)
+    methods += `	${changeCase.pascalCase(methodName)}(${changeCase.camelCase(methodName)}Dto *request_dtos.${changeCase.pascalCase(methodName)}Dto) (*response_dtos.${changeCase.pascalCase(methodName)}Dto, error)
 `;
   }
 

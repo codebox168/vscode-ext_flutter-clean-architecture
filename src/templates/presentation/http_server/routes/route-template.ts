@@ -5,7 +5,7 @@ export function getRouteTemplate(featureName: string, routesName: string[]): str
 	let routes = '';
 	for (let routeName of routesName) {
 		routes += `
-    app.Post("/${changeCase.snakeCase(featureName)}/:${changeCase.snakeCase(featureName)}_id", func(c *fiber.Ctx) error {
+    app.Post("/${changeCase.snakeCase(featureName)}/${changeCase.snakeCase(routeName)}", func(c *fiber.Ctx) error {
 		var ${changeCase.camelCase(routeName)}Dto *request_dtos.${changeCase.pascalCase(routeName)}Dto
 		if err := utils.ValidateReqDto(c, ${changeCase.camelCase(routeName)}Dto); err != nil {
 			return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{

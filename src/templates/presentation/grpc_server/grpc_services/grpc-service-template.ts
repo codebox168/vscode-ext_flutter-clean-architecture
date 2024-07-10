@@ -31,7 +31,7 @@ import (
 )
 
 var ${changeCase.camelCase(grpcServiceName)}Collection = utils.Client.Database("mydatabase").Collection("${changeCase.camelCase(grpcServiceName)}s")
-var ${changeCase.camelCase(grpcServiceName)}Datasource *datasources.${changeCase.pascalCase(grpcServiceName)}Datasource = datasources.New(${changeCase.camelCase(grpcServiceName)}Collection)
+var ${changeCase.camelCase(grpcServiceName)}Datasource *datasources.${changeCase.pascalCase(grpcServiceName)}MongoDatasource = datasources.New(${changeCase.camelCase(grpcServiceName)}Collection)
 var ${changeCase.camelCase(grpcServiceName)}Repo repositories.${changeCase.pascalCase(grpcServiceName)}Repository = repositories_impl.New(${changeCase.camelCase(grpcServiceName)}Datasource)
 
 type ${changeCase.pascalCase(grpcServiceName)}GrpcService struct {
