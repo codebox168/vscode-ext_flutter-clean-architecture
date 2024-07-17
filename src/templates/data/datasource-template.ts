@@ -41,17 +41,64 @@ func (${datasourceName[0].toLowerCase()} *${pascalCaseDatasourceName}MongoDataso
 	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
 	defer cancel()
 
-	// _, err := ${datasourceName[0].toLowerCase()}.mongoCollection.InsertOne(ctx, ${changeCase.camelCase(methodName)}Dto)
-	// _, err := ${datasourceName[0].toLowerCase()}.mongoCollection.UpdateByID(ctx, ${changeCase.camelCase(methodName)}Dto.Id,bson.M{"$set": ${changeCase.camelCase(methodName)}Dto})
-	// _, err := ${datasourceName[0].toLowerCase()}.mongoCollection.DeleteOne(ctx, bson.M{"_id": ${changeCase.camelCase(methodName)}Dto.Id})
+	// for create 
+	// _, err = ${datasourceName[0].toLowerCase()}.mongoCollection.InsertOne(ctx, ${changeCase.camelCase(methodName)}Dto)
+	// if err != nil {
+	// 	return nil, err
+	// }
+	// return &response_dtos.${changeCase.pascalCase(methodName)}Dto{
+	//	Message:"success"
+	// }, nil
 
-	// for find you have to return &response, nil
+	// for update 
+	// _, err = ${datasourceName[0].toLowerCase()}.mongoCollection.UpdateByID(ctx,objID,bson.M{"$set": ${changeCase.camelCase(methodName)}Dto})
+	// if err != nil {
+	// 	return nil, err
+	// }
+	// return &response_dtos.${changeCase.pascalCase(methodName)}Dto{
+	//	Message:"success"
+	// }, nil
+
+	// for delete 
+	// _, err = ${datasourceName[0].toLowerCase()}.mongoCollection.DeleteOne(ctx, bson.M{"_id":objID})
+	// if err != nil {
+	// 	return nil, err
+	// }
+	// return &response_dtos.${changeCase.pascalCase(methodName)}Dto{
+	//	Message:"success"
+	// }, nil
+
+	// for findOne you have to return &response, nil
 	// var response response_dtos.${changeCase.pascalCase(methodName)}Dto
-	// err := ${datasourceName[0].toLowerCase()}.mongoCollection.FindOne(ctx, bson.M{"_id": ${changeCase.camelCase(methodName)}Dto.Id}).Decode(&response)
+	// err = ${datasourceName[0].toLowerCase()}.mongoCollection.FindOne(ctx, bson.M{"_id":objID}).Decode(&response)
+	// if err != nil {
+	// 	return nil, err
+	// }
+	// return &response, nil
 
-	if err != nil {
-		return nil, err
-	}
+	// for find many
+	// filter := bson.M{}
+	// if ${changeCase.camelCase(methodName)}Dto.Name != "" {
+	// 	filter["name"] = ${changeCase.camelCase(methodName)}Dto.Name
+	// }
+	// offset := (${changeCase.camelCase(methodName)}Dto.PageNum - 1) * ${changeCase.camelCase(methodName)}Dto.PerPage
+	// options := options.Find()
+	// options.SetSkip(int64(offset))
+	// options.SetLimit(int64(${changeCase.camelCase(methodName)}Dto.PerPage))
+	// cursor, err := ${datasourceName[0].toLowerCase()}.mongoCollection.Find(ctx, filter, options)
+	// defer cursor.Close(ctx)
+	// if err != nil {
+	// 	return nil, err
+	// }
+	// var Items []response_dtos.${changeCase.camelCase(methodName)}DtoItem
+	// if err := cursor.All(ctx, &Items); err != nil {
+	// 	return nil, err
+	// }
+	// response := response_dtos.${changeCase.camelCase(methodName)}Dto{
+	// 	Data: Items,
+	// }
+	// return &response, nil
+
 	return &response_dtos.${changeCase.pascalCase(methodName)}Dto{}, nil
 }
 `;
