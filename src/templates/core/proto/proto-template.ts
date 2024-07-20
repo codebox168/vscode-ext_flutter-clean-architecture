@@ -26,7 +26,8 @@ message ${changeCase.pascalCase(requestReply)}Reply {
 
 package ${changeCase.snakeCase(serviceName)}_grpc;
 
-option go_package = "./src/presentation/grpc_server/grpc_sevices";
+option go_package = "./src/presentation/grpc_server/grpc_services";
+// protoc --go_out=.  --go-grpc_out=. core/proto/${changeCase.snakeCase(serviceName)}.proto
 
 ${requestReplies}
 

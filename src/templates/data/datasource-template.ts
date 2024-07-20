@@ -80,11 +80,32 @@ func (${datasourceName[0].toLowerCase()} *${pascalCaseDatasourceName}MongoDataso
 	// filter := bson.M{}
 	// if ${changeCase.camelCase(methodName)}Dto.Name != "" {
 	// 	filter["name"] = ${changeCase.camelCase(methodName)}Dto.Name
+	//  filter["name"] = bson.M{"$regex": ${changeCase.camelCase(methodName)}Dto.Name, "$options": "i"}
 	// }
+
+	// if ${changeCase.camelCase(methodName)}Dto.SearchQuery != "" {
+	// 	filter["$or"] = []bson.M{
+	// 		{"title": bson.M{"$regex": ${changeCase.camelCase(methodName)}Dto.SearchQuery, "$options": "i"}},
+	// 		{"description": bson.M{"$regex": ${changeCase.camelCase(methodName)}Dto.SearchQuery, "$options": "i"}},
+	// 	}
+	// }
+
+	// // Set pagination options
 	// offset := (${changeCase.camelCase(methodName)}Dto.PageNum - 1) * ${changeCase.camelCase(methodName)}Dto.PerPage
 	// options := options.Find()
 	// options.SetSkip(int64(offset))
 	// options.SetLimit(int64(${changeCase.camelCase(methodName)}Dto.PerPage))
+
+	// // Set sorting options
+	// if ${changeCase.camelCase(methodName)}Dto.OrderBy != "" {
+	// 	sortOrder := 1 // default to ascending
+	// 	if ${changeCase.camelCase(methodName)}Dto.OrderType == "desc" {
+	// 		sortOrder = -1
+	// 	}
+	// 	options.SetSort(bson.D{{Key: ${changeCase.camelCase(methodName)}Dto.OrderBy, Value: sortOrder}})
+	// }
+
+
 	// cursor, err := ${datasourceName[0].toLowerCase()}.mongoCollection.Find(ctx, filter, options)
 	// defer cursor.Close(ctx)
 	// if err != nil {
@@ -98,8 +119,6 @@ func (${datasourceName[0].toLowerCase()} *${pascalCaseDatasourceName}MongoDataso
 	// 	Data: Items,
 	// }
 	// return &response, nil
-
-	return &response_dtos.${changeCase.pascalCase(methodName)}Dto{}, nil
 }
 `;
   }

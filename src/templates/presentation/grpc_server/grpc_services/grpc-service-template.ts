@@ -18,7 +18,7 @@ func (s *${changeCase.pascalCase(grpcServiceName)}GrpcService) ${changeCase.pasc
   `;
 	}
 
-	return `package grpc_sevices
+	return `package grpc_services
 
 import (
 	context "context"

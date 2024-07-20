@@ -17,8 +17,9 @@ func init() {
 }
 
 func ValidateReqDto[DtoType any](ctx *fiber.Ctx, dto *DtoType) error {
-	ctx.ReqHeaderParser(dto) // \`reqHeader:"ids"\`
 	ctx.BodyParser(dto)      // \`json:"id"\`
+	ctx.CookieParser(dto) 	 // \`cookie:"name"\`
+	ctx.ReqHeaderParser(dto) // \`reqHeader:"ids"\`
 	ctx.ParamsParser(dto)    // \`params:"id"\`
 	ctx.QueryParser(dto)     // \`query:"name"\`
 	if err := validate.Struct(dto); err != nil {
