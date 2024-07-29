@@ -37,7 +37,7 @@ import (
 	"${changeCase.camelCase(featureName)}.service.com/src/domain/request_dtos"
 )
 
-var ${changeCase.camelCase(featureName)}Collection = utils.Client.Database("mydatabase").Collection("${changeCase.camelCase(featureName)}")
+var ${changeCase.camelCase(featureName)}Collection = utils.Client.Database("mydatabase").Collection("${changeCase.camelCase(featureName)}s")
 var ${changeCase.camelCase(featureName)}MongoDatasource *datasources.${changeCase.pascalCase(featureName)}MongoDatasource = datasources.New(${changeCase.camelCase(featureName)}Collection)
 var ${changeCase.camelCase(featureName)}Repo repositories.${changeCase.pascalCase(featureName)}Repository = repositories_impl.New(${changeCase.camelCase(featureName)}MongoDatasource)
 
