@@ -23,6 +23,7 @@ import {
   getCubitTemplate,
   getEntityTemplate,
   getModelTemplate,
+  getNotifierMethodsTemplate,
   getNotifierStateTemplate,
   getNotifierTemplate,
   getParamTemplate,
@@ -30,8 +31,9 @@ import {
   getUsecaseTemplate,
 } from "./templates";
 import { analyzeDependencies } from "./utils";
-import { getRepositoryImplTemplate, getRepositoryTemplate } from "./templates/repository.template";
-import { getLocalDatasourceImplTemplate, getLocalDatasourceTemplate, getRemoteDatasourceImplTemplate, getRemoteDatasourceTemplate } from "./templates/datasource.template";
+import { getRepositoryImplMethodsTemplate, getRepositoryImplTemplate, getRepositoryMethodsTemplate, getRepositoryTemplate } from "./templates/repository.template";
+import { getLocalDatasourceImplMethodTemplate, getLocalDatasourceImplTemplate, getLocalDatasourceMethodsTemplate, getLocalDatasourceTemplate, getRemoteDatasourceImplMethodsTemplate, getRemoteDatasourceImplTemplate, getRemoteDatasourceMethodsTemplate, getRemoteDatasourceTemplate } from "./templates/datasource.template";
+import { appendMethodToClass } from "./utils/append-method-to-class";
 
 export function activate(_context: ExtensionContext) {
   analyzeDependencies();
@@ -177,9 +179,7 @@ export async function generateFeatureArchitecture(
 ) {
   // Create the features directory if its does not exist yet
   const featuresDirectoryPath = getFeaturesDirectoryPath(targetDirectory);
-  if (!existsSync(featuresDirectoryPath)) {
-    await createDirectory(featuresDirectoryPath);
-  }
+  await createDirectory(featuresDirectoryPath);
 
   // Create the feature directory
   const featureDirectoryPath = path.join(featuresDirectoryPath, changeCase.snakeCase(featureName));
@@ -199,6 +199,7 @@ export async function generateFeatureArchitecture(
   // Generate the datasource in the data layer
   await generateLocalDatasourceImplCode(featureName, dataDirectoryPath, actionsName);
   await generateRemoteDatasourceImplCode(featureName, dataDirectoryPath, actionsName);
+
   // Create the domain layer
   const domainDirectoryPath = path.join(featureDirectoryPath, "domain");
   await createDirectories(domainDirectoryPath, [
@@ -253,7 +254,8 @@ async function generateProviderCode(
 ) {
   const targetPath = `${targetDirectory}/${changeCase.snakeCase(featureName)}_provider.dart`;
   if (existsSync(targetPath)) {
-    throw Error(`${changeCase.snakeCase(featureName)}_provider.dart already exists`);
+    console.log(`${changeCase.snakeCase(featureName)}_provider.dart already exists`);
+    return;
   }
   return new Promise(async (resolve, reject) => {
     writeFile(
@@ -306,12 +308,16 @@ export async function createDirectories(
 
 function createDirectory(targetDirectory: string): Promise<void> {
   return new Promise((resolve, reject) => {
-    mkdirp(targetDirectory, (error) => {
-      if (error) {
-        return reject(error);
-      }
+    if (!existsSync(targetDirectory)) {
+      mkdirp(targetDirectory, (error) => {
+        if (error) {
+          return reject(error);
+        }
+        resolve();
+      });
+    } else {
       resolve();
-    });
+    }
   });
 }
 
@@ -321,9 +327,7 @@ async function generateRemoteDatasourceImplCode(
   actionsName: string[]
 ) {
   const remoteDatasourceDirectoryPath = `${targetDirectory}/datasources`;
-  if (!existsSync(remoteDatasourceDirectoryPath)) {
-    await createDirectory(remoteDatasourceDirectoryPath);
-  }
+  await createDirectory(remoteDatasourceDirectoryPath);
 
   await Promise.all([
     createRemoteDatasourceTemplate(remoteDatasourceName, targetDirectory, actionsName),
@@ -337,9 +341,7 @@ async function generateLocalDatasourceImplCode(
   actionsName: string[]
 ) {
   const localDatasourceDirectoryPath = `${targetDirectory}/datasources`;
-  if (!existsSync(localDatasourceDirectoryPath)) {
-    await createDirectory(localDatasourceDirectoryPath);
-  }
+  await createDirectory(localDatasourceDirectoryPath);
 
   await Promise.all([
     createLocalDatasourceTemplate(localDatasourceName, targetDirectory, actionsName),
@@ -352,13 +354,13 @@ async function generateModelCode(
   targetDirectory: string,
 ) {
   const modelDirectoryPath = `${targetDirectory}/models`;
-  if (!existsSync(modelDirectoryPath)) {
-    await createDirectory(modelDirectoryPath);
-  }
+  await createDirectory(modelDirectoryPath);
+
   const snakeCaseModelName = changeCase.snakeCase(modelName);
   const targetPath = `${targetDirectory}/models/${snakeCaseModelName}_model.dart`;
   if (existsSync(targetPath)) {
-    throw Error(`${snakeCaseModelName}_model.dart already exists`);
+    console.log(`${snakeCaseModelName}_model.dart already exists`);
+    return;
   }
   return new Promise(async (resolve, reject) => {
     writeFile(
@@ -382,9 +384,7 @@ async function generateRepositoryImplCode(
   actionsName: string[]
 ) {
   const repositoryDirectoryPath = `${targetDirectory}/repositories`;
-  if (!existsSync(repositoryDirectoryPath)) {
-    await createDirectory(repositoryDirectoryPath);
-  }
+  await createDirectory(repositoryDirectoryPath);
 
   await Promise.all([
     createRepositoryImplTemplate(repositoryName, targetDirectory, actionsName),
@@ -396,9 +396,8 @@ async function generateParamCode(
   paramName: string
 ) {
   const repositoryDirectoryPath = `${targetDirectory}/params`;
-  if (!existsSync(repositoryDirectoryPath)) {
-    await createDirectory(repositoryDirectoryPath);
-  }
+  await createDirectory(repositoryDirectoryPath);
+
   await Promise.all([
     createParamTemplate(targetDirectory, paramName),
   ]);
@@ -410,9 +409,8 @@ async function generateUsecaseCode(
   repositoryName: string
 ) {
   const repositoryDirectoryPath = `${targetDirectory}/usecases`;
-  if (!existsSync(repositoryDirectoryPath)) {
-    await createDirectory(repositoryDirectoryPath);
-  }
+  await createDirectory(repositoryDirectoryPath);
+
   await Promise.all([
     createUsecaseTemplate(targetDirectory, usecaseName, repositoryName),
   ]);
@@ -423,14 +421,13 @@ async function generateEntityCode(
   targetDirectory: string
 ) {
   const entityDirectoryPath = `${targetDirectory}/entities`;
-  if (!existsSync(entityDirectoryPath)) {
-    await createDirectory(entityDirectoryPath);
-  }
+  await createDirectory(entityDirectoryPath);
 
   const snakeCaseEntityName = changeCase.snakeCase(entityName);
   const targetPath = `${targetDirectory}/entities/${snakeCaseEntityName}_entity.dart`;
   if (existsSync(targetPath)) {
-    throw Error(`${snakeCaseEntityName}_entity.dart already exists`);
+    console.log(`${snakeCaseEntityName}_entity.dart already exists`);
+    return;
   }
   return new Promise(async (resolve, reject) => {
     writeFile(
@@ -455,9 +452,7 @@ async function generateRepositoryCode(
   actionsName: string[]
 ) {
   const repositoryDirectoryPath = `${targetDirectory}/repositories`;
-  if (!existsSync(repositoryDirectoryPath)) {
-    await createDirectory(repositoryDirectoryPath);
-  }
+  await createDirectory(repositoryDirectoryPath);
 
   await Promise.all([
     createRepositoryTemplate(repositoryName, targetDirectory, actionsName),
@@ -504,9 +499,8 @@ async function generateNotifierCode(
   actionsName: string[],
 ) {
   const blocDirectoryPath = `${targetDirectory}/notifier`;
-  if (!existsSync(blocDirectoryPath)) {
-    await createDirectory(blocDirectoryPath);
-  }
+  await createDirectory(blocDirectoryPath);
+
 
   await Promise.all([
     createNotifierStateTemplate(blocName, targetDirectory, useEquatable),
@@ -655,7 +649,8 @@ function createNotifierStateTemplate(
   const snakeCaseBlocName = changeCase.snakeCase(blocName);
   const targetPath = `${targetDirectory}/notifier/${snakeCaseBlocName}_state.dart`;
   if (existsSync(targetPath)) {
-    throw Error(`${snakeCaseBlocName}_state.dart already exists`);
+    console.log(`${snakeCaseBlocName}_state.dart already exists`);
+    return;
   }
   return new Promise(async (resolve, reject) => {
     writeFile(
@@ -682,7 +677,23 @@ function createNotifierTemplate(
   const snakeCaseBlocName = changeCase.snakeCase(blocName);
   const targetPath = `${targetDirectory}/notifier/${snakeCaseBlocName}_notifier.dart`;
   if (existsSync(targetPath)) {
-    throw Error(`${snakeCaseBlocName}_notifier.dart already exists`);
+    console.log(`${snakeCaseBlocName}_notifier.dart already exists`);
+    let methodToAppend = getNotifierMethodsTemplate(blocName, useEquatable, actionsName);
+    let newFileContent = appendMethodToClass(targetPath, methodToAppend);
+    return new Promise(async (resolve, reject) => {
+      writeFile(
+        targetPath,
+        newFileContent,
+        "utf8",
+        (error) => {
+          if (error) {
+            reject(error);
+            return;
+          }
+          resolve(true);
+        }
+      );
+    });
   }
   return new Promise(async (resolve, reject) => {
     writeFile(
@@ -707,7 +718,8 @@ function createParamTemplate(
   const snakeCaseParamName = changeCase.snakeCase(paramName);
   const targetPath = `${targetDirectory}/params/param_${snakeCaseParamName}.dart`;
   if (existsSync(targetPath)) {
-    throw Error(`param_${snakeCaseParamName}.dart already exists`);
+    console.log(`param_${snakeCaseParamName}.dart already exists`);
+    return;
   }
   return new Promise(async (resolve, reject) => {
     writeFile(
@@ -732,7 +744,8 @@ function createUsecaseTemplate(
 ) {
   const targetPath = `${targetDirectory}/usecases/${changeCase.snakeCase(usecaseName)}_usecase.dart`;
   if (existsSync(targetPath)) {
-    throw Error(`${changeCase.snakeCase(usecaseName)}_usecase.dart already exists`);
+    console.log(`${changeCase.snakeCase(usecaseName)}_usecase.dart already exists`);
+    return;
   }
   return new Promise(async (resolve, reject) => {
     writeFile(
@@ -758,7 +771,23 @@ function createRepositoryTemplate(
   const snakeCaseFeatureName = changeCase.snakeCase(featureName);
   const targetPath = `${targetDirectory}/repositories/${snakeCaseFeatureName}_repository.dart`;
   if (existsSync(targetPath)) {
-    throw Error(`${snakeCaseFeatureName}_repository.dart already exists`);
+    console.log(`${snakeCaseFeatureName}_repository.dart already exists`);
+    let methodToAppend = getRepositoryMethodsTemplate(featureName, actionsName);
+    let newFileContent = appendMethodToClass(targetPath, methodToAppend);
+    return new Promise(async (resolve, reject) => {
+      writeFile(
+        targetPath,
+        newFileContent,
+        "utf8",
+        (error) => {
+          if (error) {
+            reject(error);
+            return;
+          }
+          resolve(true);
+        }
+      );
+    });
   }
   return new Promise(async (resolve, reject) => {
     writeFile(
@@ -776,7 +805,7 @@ function createRepositoryTemplate(
   });
 }
 
-function createRepositoryImplTemplate(
+async function createRepositoryImplTemplate(
   featureName: string,
   targetDirectory: string,
   actionsName: string[]
@@ -784,7 +813,23 @@ function createRepositoryImplTemplate(
   const snakeCaseFeatureName = changeCase.snakeCase(featureName);
   const targetPath = `${targetDirectory}/repositories/${snakeCaseFeatureName}_repository_impl.dart`;
   if (existsSync(targetPath)) {
-    throw Error(`${snakeCaseFeatureName}_repository_impl.dart already exists`);
+    let methodToAppend = getRepositoryImplMethodsTemplate(featureName, actionsName);
+    let newFileContent = appendMethodToClass(targetPath, methodToAppend);
+    console.log(`${snakeCaseFeatureName}_repository_impl.dart already exists`);
+    return new Promise(async (resolve, reject) => {
+      writeFile(
+        targetPath,
+        newFileContent,
+        "utf8",
+        (error) => {
+          if (error) {
+            reject(error);
+            return;
+          }
+          resolve(true);
+        }
+      );
+    });
   }
   return new Promise(async (resolve, reject) => {
     writeFile(
@@ -810,7 +855,24 @@ function createLocalDatasourceTemplate(
   const snakeCaseFeatureName = changeCase.snakeCase(featureName);
   const targetPath = `${targetDirectory}/datasources/${snakeCaseFeatureName}_local_datasource.dart`;
   if (existsSync(targetPath)) {
-    throw Error(`${snakeCaseFeatureName}_local_datasource.dart already exists`);
+    console.log(`${snakeCaseFeatureName}_local_datasource.dart already exists`);
+    return;
+    // let methodToAppend = getLocalDatasourceMethodsTemplate(featureName, actionsName);
+    // let newFileContent = appendMethodToClass(targetPath,methodToAppend);
+    // return new Promise(async (resolve, reject) => {
+    //   writeFile(
+    //     targetPath,
+    //     newFileContent,
+    //     "utf8",
+    //     (error) => {
+    //       if (error) {
+    //         reject(error);
+    //         return;
+    //       }
+    //       resolve(true);
+    //     }
+    //   );
+    // });
   }
   return new Promise(async (resolve, reject) => {
     writeFile(
@@ -835,7 +897,24 @@ function createLocalDatasourceImplTemplate(
   const snakeCaseFeatureName = changeCase.snakeCase(featureName);
   const targetPath = `${targetDirectory}/datasources/${snakeCaseFeatureName}_local_datasource_impl.dart`;
   if (existsSync(targetPath)) {
-    throw Error(`${snakeCaseFeatureName}_local_datasource_impl.dart already exists`);
+    console.log(`${snakeCaseFeatureName}_local_datasource_impl.dart already exists`);
+    return;
+    // let methodToAppend = getLocalDatasourceImplMethodTemplate(featureName);
+    // let newFileContent = appendMethodToClass(targetPath,methodToAppend);
+    // return new Promise(async (resolve, reject) => {
+    //   writeFile(
+    //     targetPath,
+    //     newFileContent,
+    //     "utf8",
+    //     (error) => {
+    //       if (error) {
+    //         reject(error);
+    //         return;
+    //       }
+    //       resolve(true);
+    //     }
+    //   );
+    // });
   }
   return new Promise(async (resolve, reject) => {
     writeFile(
@@ -861,7 +940,23 @@ function createRemoteDatasourceTemplate(
   const snakeCaseFeatureName = changeCase.snakeCase(featureName);
   const targetPath = `${targetDirectory}/datasources/${snakeCaseFeatureName}_remote_datasource.dart`;
   if (existsSync(targetPath)) {
-    throw Error(`${snakeCaseFeatureName}_remote_datasource.dart already exists`);
+    console.log(`${snakeCaseFeatureName}_remote_datasource.dart already exists`);
+    let methodToAppend = getRemoteDatasourceMethodsTemplate(snakeCaseFeatureName, actionsName);
+    let newFileContent = appendMethodToClass(targetPath, methodToAppend);
+    return new Promise(async (resolve, reject) => {
+      writeFile(
+        targetPath,
+        newFileContent,
+        "utf8",
+        (error) => {
+          if (error) {
+            reject(error);
+            return;
+          }
+          resolve(true);
+        }
+      );
+    });
   }
   return new Promise(async (resolve, reject) => {
     writeFile(
@@ -887,7 +982,23 @@ function createRemoteDatasourceImplTemplate(
   const snakeCaseFeatureName = changeCase.snakeCase(featureName);
   const targetPath = `${targetDirectory}/datasources/${snakeCaseFeatureName}_remote_datasource_impl.dart`;
   if (existsSync(targetPath)) {
-    throw Error(`${snakeCaseFeatureName}_remote_datasource_impl.dart already exists`);
+    console.log(`${snakeCaseFeatureName}_remote_datasource_impl.dart already exists`);
+    let methodToAppend = getRemoteDatasourceImplMethodsTemplate(snakeCaseFeatureName, actionsName);
+    let newFileContent = appendMethodToClass(targetPath, methodToAppend);
+    return new Promise(async (resolve, reject) => {
+      writeFile(
+        targetPath,
+        newFileContent,
+        "utf8",
+        (error) => {
+          if (error) {
+            reject(error);
+            return;
+          }
+          resolve(true);
+        }
+      );
+    });
   }
   return new Promise(async (resolve, reject) => {
     writeFile(

@@ -2,6 +2,22 @@ import * as changeCase from "change-case";
 
 
 
+export function getRepositoryMethodsTemplate(repositoryName: string, methodsName: string[]): string {
+  const pascalCaseRepositoryName = changeCase.pascalCase(repositoryName);
+
+  let methods = '';
+  for (let methodName of methodsName) {
+    methods += `
+  Future<Either<Failure, ${pascalCaseRepositoryName}Entity>> ${changeCase.camelCase(methodName)}({
+    required Param${changeCase.pascalCase(methodName)} param,
+  });
+`;
+  }
+
+  return `${methods}
+`;
+}
+
 export function getRepositoryTemplate(repositoryName: string, methodsName: string[]): string {
   const pascalCaseRepositoryName = changeCase.pascalCase(repositoryName);
 
@@ -27,6 +43,39 @@ abstract class ${pascalCaseRepositoryName}Repository {
 ${methods}
 }
 `;
+}
+
+export function getRepositoryImplMethodsTemplate(repositoryName: string, methodsName: string[]): string {
+  const pascalCaseRepositoryName = changeCase.pascalCase(repositoryName);
+  let methods = '';
+  let imports = '';
+
+  for (let methodName of methodsName) {
+    imports += `import '../../domain/params/param_${changeCase.snakeCase(methodName)}.dart';
+`;
+    methods += `
+  @override
+  Future<Either<Failure, ${pascalCaseRepositoryName}Entity>> ${changeCase.camelCase(methodName)}({
+    required Param${changeCase.pascalCase(methodName)} param,
+  }) async {
+    try {
+      final result = await _${changeCase.camelCase(repositoryName)}RemoteDatasource.${changeCase.camelCase(methodName)}(param: param);
+      return Right(result);
+    } on AppException catch (e) {
+      return Left(e.toFailure());
+    } catch (e) {
+      return Left(
+        UnknownException(
+          code: "${changeCase.pascalCase(repositoryName)}RepositoryImpl",
+          message: e.toString(),
+        ).toFailure(),
+      );
+    }
+  }
+`;
+  }
+
+return methods;
 }
 
 export function getRepositoryImplTemplate(repositoryName: string, methodsName: string[]): string {

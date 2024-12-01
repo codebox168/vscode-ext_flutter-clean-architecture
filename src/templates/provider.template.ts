@@ -1,24 +1,20 @@
 import * as changeCase from "change-case";
 
 export function getProviderTemplate(providerName: string, usecasesName: string[]): string {
-
-    let imports = '';
-    let usecases = '';
-    let notifierArgs = '';
-
-    for (let usecaseName of usecasesName) {
-        imports += `import 'domain/usecases/${changeCase.snakeCase(usecaseName)}_usecase.dart';
+  let imports = '';
+  let usecases = '';
+  for (let usecaseName of usecasesName) {
+    imports += `import 'domain/usecases/${changeCase.snakeCase(usecaseName)}_usecase.dart';
 `;
-        usecases += `
-final _${changeCase.camelCase(usecaseName)}Usecase = Provider(
+    usecases += `
+final ${changeCase.camelCase(usecaseName)}Usecase = Provider(
   (ref) => ${changeCase.pascalCase(usecaseName)}Usecase(${changeCase.camelCase(providerName)}Repository: ref.read(_${changeCase.camelCase(providerName)}Repository)),
 );
 `;
-        notifierArgs += `    ${changeCase.camelCase(usecaseName)}Usecase: ref.read(_${changeCase.camelCase(usecaseName)}Usecase),
-`;
-    }
 
-    return `import 'package:flutter_riverpod/flutter_riverpod.dart';
+  }
+
+  return `import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:http/io_client.dart';
 
 import '../../core/utils/secure_storage.dart';
@@ -43,11 +39,8 @@ final _${changeCase.camelCase(providerName)}Repository = Provider(
   ),
 );
 ${usecases}
-final ${changeCase.camelCase(providerName)}Notifier = Provider(
-  (ref) => ${changeCase.pascalCase(providerName)}Notifier(
-${notifierArgs}
-  ),
-);
+final ${changeCase.camelCase(providerName)}NotifierProvider =
+    NotifierProvider<${changeCase.pascalCase(providerName)}Notifier, ${changeCase.pascalCase(providerName)}State>(${changeCase.pascalCase(providerName)}Notifier.new);
 
 `;
 }

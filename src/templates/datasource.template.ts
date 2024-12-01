@@ -1,5 +1,19 @@
 import * as changeCase from "change-case";
 
+
+export function getLocalDatasourceMethodsTemplate(datasourceName: string, methodsName: string[]): string {
+  const pascalCaseDatasourceName = changeCase.pascalCase(datasourceName);
+  return `
+  Future<${pascalCaseDatasourceName}Model?> get${pascalCaseDatasourceName}();
+
+  Future<void> save${pascalCaseDatasourceName}({
+    required ${pascalCaseDatasourceName}Model ${changeCase.camelCase(datasourceName)}Model,
+  });
+
+  Future<void> remove${pascalCaseDatasourceName}();
+`;
+}
+
 export function getLocalDatasourceTemplate(datasourceName: string, methodsName: string[]): string {
   const pascalCaseDatasourceName = changeCase.pascalCase(datasourceName);
 
@@ -15,6 +29,39 @@ abstract class ${pascalCaseDatasourceName}LocalDatasource {
 
   Future<void> remove${pascalCaseDatasourceName}();
 }
+`;
+}
+
+
+export function getLocalDatasourceImplMethodTemplate(datasourceName: string): string {
+  const pascalCaseDatasourceName = changeCase.pascalCase(datasourceName);
+  const camelCaseDatasourceName = changeCase.camelCase(datasourceName);
+  return `
+
+  @override
+  Future<${pascalCaseDatasourceName}Model?> get${pascalCaseDatasourceName}() async {
+    if (await _secureStorage.isExist(key: '${pascalCaseDatasourceName}')) {
+      return ${pascalCaseDatasourceName}Model.fromJson(
+        jsonDecode((await _secureStorage.read<String>(key: '${pascalCaseDatasourceName}'))!),
+      );
+    } else {
+      return null;
+    }
+  }
+
+  @override
+  Future<void> remove${pascalCaseDatasourceName}() async {
+    await _secureStorage.delete(key: '${pascalCaseDatasourceName}');
+  }
+
+  @override
+  Future<void> save${pascalCaseDatasourceName}({required ${pascalCaseDatasourceName}Model ${camelCaseDatasourceName}Model}) async {
+    await _secureStorage.write<String>(
+      key: '${pascalCaseDatasourceName}',
+      value: jsonEncode(${camelCaseDatasourceName}Model.toMap()),
+    );
+  }
+
 `;
 }
 
@@ -60,6 +107,22 @@ class ${pascalCaseDatasourceName}LocalDatasourceImpl implements ${pascalCaseData
 }
 
 
+export function getRemoteDatasourceMethodsTemplate(datasourceName: string, methodsName: string[]): string {
+  const pascalCaseDatasourceName = changeCase.pascalCase(datasourceName);
+  let methods = '';
+  let imports = '';
+
+  for (let methodName of methodsName) {
+    methods += `
+  Future<${changeCase.pascalCase(datasourceName)}Model> ${changeCase.camelCase(methodName)}({
+    required Param${changeCase.pascalCase(methodName)} param,
+  });
+`;
+  }
+  return `${methods}
+`;
+}
+
 export function getRemoteDatasourceTemplate(datasourceName: string, methodsName: string[]): string {
   const pascalCaseDatasourceName = changeCase.pascalCase(datasourceName);
   let methods = '';
@@ -80,6 +143,40 @@ import '../models/${changeCase.snakeCase(datasourceName)}_model.dart';
 abstract class ${pascalCaseDatasourceName}RemoteDatasource {
 ${methods}
 }
+`;
+}
+
+export function getRemoteDatasourceImplMethodsTemplate(datasourceName: string, methodsName: string[]): string {
+  const pascalCaseDatasourceName = changeCase.pascalCase(datasourceName);
+  const snakeCaseDatasourceName = changeCase.snakeCase(datasourceName);
+  let methods = '';
+  for (let methodName of methodsName) {
+    methods += `
+  @override
+  Future<${changeCase.pascalCase(datasourceName)}Model> ${changeCase.camelCase(methodName)}({
+    required Param${changeCase.pascalCase(methodName)} param,
+  }) async {
+    try {
+      final result = await _httpClient.get(Uri.parse(""));
+      if (result.statusCode == 200) {
+        return ${changeCase.pascalCase(datasourceName)}Model.fromJson(jsonDecode(result.body));
+      } else {
+        throw HttpException(
+          code: result.statusCode.toString(),
+          message: result.body,
+        );
+      }
+    } on AppException {
+      rethrow;
+    } catch (e) {
+      throw HttpException(
+        message: e.toString(),
+      );
+    }
+  }
+`;
+  }
+  return `${methods}
 `;
 }
 
