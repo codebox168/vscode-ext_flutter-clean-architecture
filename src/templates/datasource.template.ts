@@ -4,13 +4,13 @@ import * as changeCase from "change-case";
 export function getLocalDatasourceMethodsTemplate(datasourceName: string, methodsName: string[]): string {
   const pascalCaseDatasourceName = changeCase.pascalCase(datasourceName);
   return `
-  Future<${pascalCaseDatasourceName}Model?> get${pascalCaseDatasourceName}();
+  Future<${pascalCaseDatasourceName}sPaginateModel> get${pascalCaseDatasourceName}();
 
-  Future<void> save${pascalCaseDatasourceName}({
-    required ${pascalCaseDatasourceName}Model ${changeCase.camelCase(datasourceName)}Model,
+  Future<void> save${pascalCaseDatasourceName}s({
+    required ${pascalCaseDatasourceName}sPaginateModel ${changeCase.camelCase(datasourceName)}sPaginateModel,
   });
 
-  Future<void> remove${pascalCaseDatasourceName}();
+  Future<void> remove${pascalCaseDatasourceName}s();
 `;
 }
 
@@ -21,13 +21,13 @@ export function getLocalDatasourceTemplate(datasourceName: string, methodsName: 
   return `import '../models/${changeCase.snakeCase(datasourceName)}_model.dart';
 
 abstract class ${pascalCaseDatasourceName}LocalDatasource {
-  Future<${pascalCaseDatasourceName}Model?> get${pascalCaseDatasourceName}();
+  Future<${pascalCaseDatasourceName}sPaginateModel> get${pascalCaseDatasourceName}();
 
-  Future<void> save${pascalCaseDatasourceName}({
-    required ${pascalCaseDatasourceName}Model ${changeCase.camelCase(datasourceName)}Model,
+  Future<void> save${pascalCaseDatasourceName}s({
+    required ${pascalCaseDatasourceName}sPaginateModel ${changeCase.camelCase(datasourceName)}sPaginateModel,
   });
 
-  Future<void> remove${pascalCaseDatasourceName}();
+  Future<void> remove${pascalCaseDatasourceName}s();
 }
 `;
 }
@@ -39,26 +39,31 @@ export function getLocalDatasourceImplMethodTemplate(datasourceName: string): st
   return `
 
   @override
-  Future<${pascalCaseDatasourceName}Model?> get${pascalCaseDatasourceName}() async {
-    if (await _secureStorage.isExist(key: '${pascalCaseDatasourceName}')) {
-      return ${pascalCaseDatasourceName}Model.fromJson(
-        jsonDecode((await _secureStorage.read<String>(key: '${pascalCaseDatasourceName}'))!),
-      );
-    } else {
-      return null;
+  Future<${pascalCaseDatasourceName}sPaginateModel> get${pascalCaseDatasourceName}s() async {
+    final ${camelCaseDatasourceName}String = await _storageUtil.read(
+      key: AppConst.${pascalCaseDatasourceName}sStorageKey,
+    );
+    if (${camelCaseDatasourceName}String != null) {
+      return ${pascalCaseDatasourceName}sPaginateModel.fromJson(jsonDecode(${camelCaseDatasourceName}String));
     }
+    throw const NotFoundException(
+      message: "${pascalCaseDatasourceName}LocalDatasource: get${pascalCaseDatasourceName}s: no value in storage",
+    );
   }
 
   @override
-  Future<void> remove${pascalCaseDatasourceName}() async {
-    await _secureStorage.delete(key: '${pascalCaseDatasourceName}');
+  Future<void> remove${pascalCaseDatasourceName}s() async {
+    return await _storageUtil.delete(key: AppConst.${camelCaseDatasourceName}StorageKey);
   }
 
   @override
-  Future<void> save${pascalCaseDatasourceName}({required ${pascalCaseDatasourceName}Model ${camelCaseDatasourceName}Model}) async {
-    await _secureStorage.write<String>(
-      key: '${pascalCaseDatasourceName}',
-      value: jsonEncode(${camelCaseDatasourceName}Model.toMap()),
+  Future<void> save${pascalCaseDatasourceName}s(
+      ${pascalCaseDatasourceName}sPaginateModel ${camelCaseDatasourceName}sPaginateModel) async {
+    return await _storageUtil.write(
+      key: AppConst.${camelCaseDatasourceName}StorageKey,
+      value: jsonEncode(
+        ${camelCaseDatasourceName}sPaginateModel.toMap(),
+      ),
     );
   }
 
@@ -71,35 +76,44 @@ export function getLocalDatasourceImplTemplate(datasourceName: string): string {
   const camelCaseDatasourceName = changeCase.camelCase(datasourceName);
   return `import 'dart:convert';
 
-import '../../../../core/utils/secure_storage.dart';
-import '../models/${snakeCaseDatasourceName}_model.dart';
+import '../../../../core/constants/app_const.dart';
+import '../../../../core/errors/exceptions.dart';
+import '../../../../core/utils/storage_util.dart';
+import '../models/${snakeCaseDatasourceName}s_paginate_model.dart';
 import '${snakeCaseDatasourceName}_local_datasource.dart';
 
 class ${pascalCaseDatasourceName}LocalDatasourceImpl implements ${pascalCaseDatasourceName}LocalDatasource {  
-  final SecureStorage _secureStorage;
-  ${pascalCaseDatasourceName}LocalDatasourceImpl({required SecureStorage secureStorage})
-    : _secureStorage = secureStorage;
+  final IStorageUtil _storageUtil;
+  ${pascalCaseDatasourceName}LocalDatasourceImpl({required IStorageUtil storageUtil})
+      : _storageUtil = storageUtil;
+  
+
   @override
-  Future<${pascalCaseDatasourceName}Model?> get${pascalCaseDatasourceName}() async {
-    if (await _secureStorage.isExist(key: '${pascalCaseDatasourceName}')) {
-      return ${pascalCaseDatasourceName}Model.fromJson(
-        jsonDecode((await _secureStorage.read<String>(key: '${pascalCaseDatasourceName}'))!),
-      );
-    } else {
-      return null;
+  Future<${pascalCaseDatasourceName}sPaginateModel> get${pascalCaseDatasourceName}s() async {
+    final ${camelCaseDatasourceName}String = await _storageUtil.read(
+      key: AppConst.${pascalCaseDatasourceName}sStorageKey,
+    );
+    if (${camelCaseDatasourceName}String != null) {
+      return ${pascalCaseDatasourceName}sPaginateModel.fromJson(jsonDecode(${camelCaseDatasourceName}String));
     }
+    throw const NotFoundException(
+      message: "${pascalCaseDatasourceName}LocalDatasource: get${pascalCaseDatasourceName}s: no value in storage",
+    );
   }
 
   @override
-  Future<void> remove${pascalCaseDatasourceName}() async {
-    await _secureStorage.delete(key: '${pascalCaseDatasourceName}');
+  Future<void> remove${pascalCaseDatasourceName}s() async {
+    return await _storageUtil.delete(key: AppConst.${camelCaseDatasourceName}StorageKey);
   }
 
   @override
-  Future<void> save${pascalCaseDatasourceName}({required ${pascalCaseDatasourceName}Model ${camelCaseDatasourceName}Model}) async {
-    await _secureStorage.write<String>(
-      key: '${pascalCaseDatasourceName}',
-      value: jsonEncode(${camelCaseDatasourceName}Model.toMap()),
+  Future<void> save${pascalCaseDatasourceName}s(
+      ${pascalCaseDatasourceName}sPaginateModel ${camelCaseDatasourceName}sPaginateModel) async {
+    return await _storageUtil.write(
+      key: AppConst.${camelCaseDatasourceName}StorageKey,
+      value: jsonEncode(
+        ${camelCaseDatasourceName}sPaginateModel.toMap(),
+      ),
     );
   }
 }
@@ -114,7 +128,7 @@ export function getRemoteDatasourceMethodsTemplate(datasourceName: string, metho
 
   for (let methodName of methodsName) {
     methods += `
-  Future<${changeCase.pascalCase(datasourceName)}Model> ${changeCase.camelCase(methodName)}({
+  Future<${changeCase.pascalCase(datasourceName)}sPaginateModel> ${changeCase.camelCase(methodName)}({
     required Param${changeCase.pascalCase(methodName)} param,
   });
 `;
@@ -132,13 +146,14 @@ export function getRemoteDatasourceTemplate(datasourceName: string, methodsName:
     imports += `import '../../domain/params/param_${changeCase.snakeCase(methodName)}.dart';
 `;
     methods += `
-  Future<${changeCase.pascalCase(datasourceName)}Model> ${changeCase.camelCase(methodName)}({
+  Future<${changeCase.pascalCase(datasourceName)}sPaginateModel> ${changeCase.camelCase(methodName)}({
     required Param${changeCase.pascalCase(methodName)} param,
   });
 `;
   }
   return `${imports}
 import '../models/${changeCase.snakeCase(datasourceName)}_model.dart';
+import '../models/${changeCase.snakeCase(datasourceName)}s_paginate_model.dart';
 
 abstract class ${pascalCaseDatasourceName}RemoteDatasource {
 ${methods}
@@ -153,26 +168,15 @@ export function getRemoteDatasourceImplMethodsTemplate(datasourceName: string, m
   for (let methodName of methodsName) {
     methods += `
   @override
-  Future<${changeCase.pascalCase(datasourceName)}Model> ${changeCase.camelCase(methodName)}({
+  Future<${changeCase.pascalCase(datasourceName)}sPaginateModel> ${changeCase.camelCase(methodName)}({
     required Param${changeCase.pascalCase(methodName)} param,
   }) async {
-    try {
-      final result = await _httpClient.get(Uri.parse(""));
-      if (result.statusCode == 200) {
-        return ${changeCase.pascalCase(datasourceName)}Model.fromJson(jsonDecode(result.body));
-      } else {
-        throw HttpException(
-          code: result.statusCode.toString(),
-          message: result.body,
-        );
-      }
-    } on AppException {
-      rethrow;
-    } catch (e) {
-      throw HttpException(
-        message: e.toString(),
-      );
-    }
+    final result = await _httpClient.get<${changeCase.pascalCase(datasourceName)}sPaginateModel>(
+      AppConst.${changeCase.camelCase(methodName)}Url,
+      queryParameters: param.toMap(),
+      fromJson: ${changeCase.pascalCase(datasourceName)}sPaginateModel.fromJson,
+    );
+    return result.data!;
   }
 `;
   }
@@ -190,39 +194,31 @@ export function getRemoteDatasourceImplTemplate(datasourceName: string, methodsN
 `;
     methods += `
   @override
-  Future<${changeCase.pascalCase(datasourceName)}Model> ${changeCase.camelCase(methodName)}({
+  Future<${changeCase.pascalCase(datasourceName)}sPaginateModel> ${changeCase.camelCase(methodName)}({
     required Param${changeCase.pascalCase(methodName)} param,
   }) async {
-    try {
-      final result = await _httpClient.get(Uri.parse(""));
-      if (result.statusCode == 200) {
-        return ${changeCase.pascalCase(datasourceName)}Model.fromJson(jsonDecode(result.body));
-      } else {
-        throw HttpException(
-          code: result.statusCode.toString(),
-          message: result.body,
-        );
-      }
-    } on AppException {
-      rethrow;
-    } catch (e) {
-      throw HttpException(
-        message: e.toString(),
-      );
-    }
+    final result = await _httpClient.get<${changeCase.pascalCase(datasourceName)}sPaginateModel>(
+      AppConst.${changeCase.camelCase(methodName)}Url,
+      queryParameters: param.toMap(),
+      fromJson: ${changeCase.pascalCase(datasourceName)}sPaginateModel.fromJson,
+    );
+    return result.data!;
   }
 `;
   }
-  return `import 'dart:convert';
-import 'package:http/io_client.dart';
+  return `import '../../../../core/constants/app_const.dart';
+import '../../../../core/utils/http_client_util.dart';
 ${imports}
 import '${snakeCaseDatasourceName}_remote_datasource.dart';
 import '../models/${changeCase.snakeCase(datasourceName)}_model.dart';
+import '../models/${changeCase.snakeCase(datasourceName)}s_paginate_model.dart';
+
 import '../../../../core/errors/exceptions.dart';
 
-class ${pascalCaseDatasourceName}RemoteDatasourceImpl implements ${pascalCaseDatasourceName}RemoteDatasource {  
-  final IOClient _httpClient;
-  ${pascalCaseDatasourceName}RemoteDatasourceImpl({required IOClient httpClient})
+class ${pascalCaseDatasourceName}RemoteDatasourceImpl implements ${pascalCaseDatasourceName}RemoteDatasource {
+  final IHttpClientUtil _httpClient;
+
+  ${pascalCaseDatasourceName}RemoteDatasourceImpl({required IHttpClientUtil httpClient})
       : _httpClient = httpClient;
 ${methods}
 }

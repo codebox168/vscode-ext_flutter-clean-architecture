@@ -22,10 +22,12 @@ import {
   getCubitStateTemplate,
   getCubitTemplate,
   getEntityTemplate,
+  getModelPaginateTemplate,
   getModelTemplate,
   getNotifierMethodsTemplate,
   getNotifierStateTemplate,
   getNotifierTemplate,
+  getPaginateEntityTemplate,
   getParamTemplate,
   getProviderTemplate,
   getUsecaseTemplate,
@@ -194,6 +196,8 @@ export async function generateFeatureArchitecture(
   ]);
   // Generate the model in the data layer
   await generateModelCode(featureName, dataDirectoryPath);
+  await generatePaginateModelCode(featureName, dataDirectoryPath);
+
   // Generate the repository_impl in the data layer
   await generateRepositoryImplCode(featureName, dataDirectoryPath, actionsName);
   // Generate the datasource in the data layer
@@ -210,6 +214,7 @@ export async function generateFeatureArchitecture(
   ]);
   // Generate the Entity in the domain layer
   await generateEntityCode(featureName, domainDirectoryPath);
+  await generatePaginateEntityCode(featureName, domainDirectoryPath);
   // Generate the repository in the domain layer
   await generateRepositoryCode(featureName, domainDirectoryPath, actionsName);
   // Generate the param in the domain layer
@@ -378,6 +383,35 @@ async function generateModelCode(
   });
 }
 
+async function generatePaginateModelCode(
+  modelName: string,
+  targetDirectory: string,
+) {
+  const modelDirectoryPath = `${targetDirectory}/models`;
+  await createDirectory(modelDirectoryPath);
+
+  const snakeCaseModelName = changeCase.snakeCase(modelName);
+  const targetPath = `${targetDirectory}/models/${snakeCaseModelName}s_paginate_model.dart`;
+  if (existsSync(targetPath)) {
+    console.log(`${snakeCaseModelName}s_paginate_model.dart already exists`);
+    return;
+  }
+  return new Promise(async (resolve, reject) => {
+    writeFile(
+      targetPath,
+      getModelPaginateTemplate(modelName),
+      "utf8",
+      (error) => {
+        if (error) {
+          reject(error);
+          return;
+        }
+        resolve(true);
+      }
+    );
+  });
+}
+
 async function generateRepositoryImplCode(
   repositoryName: string,
   targetDirectory: string,
@@ -433,6 +467,35 @@ async function generateEntityCode(
     writeFile(
       targetPath,
       getEntityTemplate(entityName),
+      "utf8",
+      (error) => {
+        if (error) {
+          reject(error);
+          return;
+        }
+        resolve(true);
+      }
+    );
+  });
+}
+
+async function generatePaginateEntityCode(
+  entityName: string,
+  targetDirectory: string
+) {
+  const entityDirectoryPath = `${targetDirectory}/entities`;
+  await createDirectory(entityDirectoryPath);
+
+  const snakeCaseEntityName = changeCase.snakeCase(entityName);
+  const targetPath = `${targetDirectory}/entities/${snakeCaseEntityName}s_paginate_entity.dart`;
+  if (existsSync(targetPath)) {
+    console.log(`${snakeCaseEntityName}s_paginate_entity.dart already exists`);
+    return;
+  }
+  return new Promise(async (resolve, reject) => {
+    writeFile(
+      targetPath,
+      getPaginateEntityTemplate(entityName),
       "utf8",
       (error) => {
         if (error) {

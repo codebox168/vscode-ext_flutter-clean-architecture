@@ -6,15 +6,22 @@ export function getNotifierMethodsTemplate(notifierName: string, useEquatable: b
   for (let actionName of actionsName) {
     methods += `
   ${changeCase.camelCase(actionName)}({required Param${changeCase.pascalCase(actionName)} param}) async {
-    state = ${changeCase.pascalCase(notifierName)}Loading();
+    state = ${changeCase.pascalCase(notifierName)}sLoading(${changeCase.camelCase(notifierName)}sPaginateEntity: ${changeCase.camelCase(notifierName)}sPaginateEntity);
     final result = await ref.read(${changeCase.camelCase(actionName)}Usecase)(param: param);
     result.fold(
       (Failure failure) {
-        state = ${pascalCaseNotifierName}Failure(failure: failure);
-        state = ${pascalCaseNotifierName}Initial();
+        state = ${pascalCaseNotifierName}sFailure(
+          failure: failure,
+          ${changeCase.camelCase(notifierName)}sPaginateEntity: state.${changeCase.camelCase(notifierName)}sPaginateEntity,
+        );
+        state = ${pascalCaseNotifierName}sInitial(
+          ${changeCase.camelCase(notifierName)}sPaginateEntity: state.${changeCase.camelCase(notifierName)}sPaginateEntity,
+        );
       },
-      (${pascalCaseNotifierName}Entity ${changeCase.camelCase(notifierName)}Entity) {
-        state = ${pascalCaseNotifierName}Success(${changeCase.camelCase(notifierName)}Entity: ${changeCase.camelCase(notifierName)}Entity);
+      (${pascalCaseNotifierName}sPaginateEntity ${changeCase.camelCase(notifierName)}sPaginateEntity) {
+        state = ${pascalCaseNotifierName}sSuccess(
+          ${changeCase.camelCase(notifierName)}sPaginateEntity: ${changeCase.camelCase(notifierName)}sPaginateEntity,
+        );
       },
     );
   }
@@ -37,15 +44,22 @@ export function getNotifierTemplate(notifierName: string, useEquatable: boolean,
 
     methods += `
   ${changeCase.camelCase(actionName)}({required Param${changeCase.pascalCase(actionName)} param}) async {
-    state = ${changeCase.pascalCase(notifierName)}Loading();
+    state = ${changeCase.pascalCase(notifierName)}sLoading(${changeCase.camelCase(notifierName)}sPaginateEntity: ${changeCase.camelCase(notifierName)}sPaginateEntity);
     final result = await ref.read(${changeCase.camelCase(actionName)}Usecase)(param: param);
     result.fold(
       (Failure failure) {
-        state = ${pascalCaseNotifierName}Failure(failure: failure);
-        state = ${pascalCaseNotifierName}Initial();
+        state = ${pascalCaseNotifierName}sFailure(
+          failure: failure,
+          ${changeCase.camelCase(notifierName)}sPaginateEntity: state.${changeCase.camelCase(notifierName)}sPaginateEntity,
+        );
+        state = ${pascalCaseNotifierName}sInitial(
+          ${changeCase.camelCase(notifierName)}sPaginateEntity: state.${changeCase.camelCase(notifierName)}sPaginateEntity,
+        );
       },
-      (${pascalCaseNotifierName}Entity ${changeCase.camelCase(notifierName)}Entity) {
-        state = ${pascalCaseNotifierName}Success(${changeCase.camelCase(notifierName)}Entity: ${changeCase.camelCase(notifierName)}Entity);
+      (${pascalCaseNotifierName}sPaginateEntity ${changeCase.camelCase(notifierName)}sPaginateEntity) {
+        state = ${pascalCaseNotifierName}sSuccess(
+          ${changeCase.camelCase(notifierName)}sPaginateEntity: ${changeCase.camelCase(notifierName)}sPaginateEntity,
+        );
       },
     );
   }
@@ -67,7 +81,7 @@ part '${snakeCaseNotifierName}_state.dart';
 class ${pascalCaseNotifierName}Notifier extends Notifier<${pascalCaseNotifierName}State> {
   @override
   ${pascalCaseNotifierName}State build() {
-    return ${pascalCaseNotifierName}Initial();
+    return const ${pascalCaseNotifierName}sInitial();
   }
 
   ${methods}

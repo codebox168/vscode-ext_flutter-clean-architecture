@@ -8,7 +8,7 @@ export function getRepositoryMethodsTemplate(repositoryName: string, methodsName
   let methods = '';
   for (let methodName of methodsName) {
     methods += `
-  Future<Either<Failure, ${pascalCaseRepositoryName}Entity>> ${changeCase.camelCase(methodName)}({
+  Future<Either<Failure, ${pascalCaseRepositoryName}sPaginateEntity>> ${changeCase.camelCase(methodName)}({
     required Param${changeCase.pascalCase(methodName)} param,
   });
 `;
@@ -28,7 +28,7 @@ export function getRepositoryTemplate(repositoryName: string, methodsName: strin
     imports += `import '../params/param_${changeCase.snakeCase(methodName)}.dart';
 `;
     methods += `
-  Future<Either<Failure, ${pascalCaseRepositoryName}Entity>> ${changeCase.camelCase(methodName)}({
+  Future<Either<Failure, ${pascalCaseRepositoryName}sPaginateEntity>> ${changeCase.camelCase(methodName)}({
     required Param${changeCase.pascalCase(methodName)} param,
   });
 `;
@@ -38,6 +38,8 @@ export function getRepositoryTemplate(repositoryName: string, methodsName: strin
 
 ${methodsName.length > 0 ? "\nimport '../../../../core/errors/failures.dart';" : ''}
 ${imports}import '../../domain/entities/${changeCase.snakeCase(repositoryName)}_entity.dart';
+${imports}import '../../domain/entities/${changeCase.snakeCase(repositoryName)}s_paginate_entity.dart';
+
 
 abstract class ${pascalCaseRepositoryName}Repository {
 ${methods}
@@ -55,18 +57,20 @@ export function getRepositoryImplMethodsTemplate(repositoryName: string, methods
 `;
     methods += `
   @override
-  Future<Either<Failure, ${pascalCaseRepositoryName}Entity>> ${changeCase.camelCase(methodName)}({
+  Future<Either<Failure, ${pascalCaseRepositoryName}sPaginateEntity>> ${changeCase.camelCase(methodName)}({
     required Param${changeCase.pascalCase(methodName)} param,
   }) async {
     try {
-      final result = await _${changeCase.camelCase(repositoryName)}RemoteDatasource.${changeCase.camelCase(methodName)}(param: param);
+      final result =
+          await _${changeCase.camelCase(repositoryName)}RemoteDatasource.${changeCase.camelCase(methodName)}(param: param);
+      await _${changeCase.camelCase(repositoryName)}LocalDatasource.save${pascalCaseRepositoryName}s(result);
       return Right(result);
     } on AppException catch (e) {
       return Left(e.toFailure());
     } catch (e) {
       return Left(
         UnknownException(
-          code: "${changeCase.pascalCase(repositoryName)}RepositoryImpl",
+          code: "${pascalCaseRepositoryName}RepositoryImpl: ${changeCase.camelCase(methodName)}",
           message: e.toString(),
         ).toFailure(),
       );
@@ -75,7 +79,7 @@ export function getRepositoryImplMethodsTemplate(repositoryName: string, methods
 `;
   }
 
-return methods;
+  return methods;
 }
 
 export function getRepositoryImplTemplate(repositoryName: string, methodsName: string[]): string {
@@ -90,18 +94,20 @@ export function getRepositoryImplTemplate(repositoryName: string, methodsName: s
 `;
     methods += `
   @override
-  Future<Either<Failure, ${pascalCaseRepositoryName}Entity>> ${changeCase.camelCase(methodName)}({
+  Future<Either<Failure, ${pascalCaseRepositoryName}sPaginateEntity>> ${changeCase.camelCase(methodName)}({
     required Param${changeCase.pascalCase(methodName)} param,
   }) async {
     try {
-      final result = await _${changeCase.camelCase(repositoryName)}RemoteDatasource.${changeCase.camelCase(methodName)}(param: param);
+      final result =
+          await _${changeCase.camelCase(repositoryName)}RemoteDatasource.${changeCase.camelCase(methodName)}(param: param);
+      await _${changeCase.camelCase(repositoryName)}LocalDatasource.save${pascalCaseRepositoryName}s(result);
       return Right(result);
     } on AppException catch (e) {
       return Left(e.toFailure());
     } catch (e) {
       return Left(
         UnknownException(
-          code: "${changeCase.pascalCase(repositoryName)}RepositoryImpl",
+          code: "${pascalCaseRepositoryName}RepositoryImpl: ${changeCase.camelCase(methodName)}",
           message: e.toString(),
         ).toFailure(),
       );
@@ -114,13 +120,14 @@ export function getRepositoryImplTemplate(repositoryName: string, methodsName: s
 
   return `import 'package:dartz/dartz.dart';
 
-import '../../../../core/errors/failures.dart';
 import '../../../../core/errors/exceptions.dart';
+import '../../../../core/errors/failures.dart';
 import '../../domain/entities/${snakeCaseRepositoryName}_entity.dart';
+import '../../domain/entities/${snakeCaseRepositoryName}s_paginate_entity.dart';
+${imports}
 import '../../domain/repositories/${snakeCaseRepositoryName}_repository.dart';
 import '../datasources/${snakeCaseRepositoryName}_local_datasource.dart';
 import '../datasources/${snakeCaseRepositoryName}_remote_datasource.dart';
-${imports}
 
 class ${pascalCaseRepositoryName}RepositoryImpl implements ${pascalCaseRepositoryName}Repository {
   final ${pascalCaseRepositoryName}LocalDatasource _${camelCaseRepositoryName}LocalDatasource;
